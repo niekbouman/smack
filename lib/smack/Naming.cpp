@@ -207,20 +207,22 @@ namespace {
     llvm_unreachable("Unexpected value.");
   }
 
-  const std::string getDebugName(const Value* V) {
-    auto F = getFunction(V);
-    for (auto& I : instructions(F)) {
-      if (auto D = dyn_cast<DbgDeclareInst>(&I)) {
-        if (D->getAddress() == V && D->getVariable())
-          return D->getVariable()->getName();
-
-      } else if (auto D = dyn_cast<DbgValueInst>(&I)) {
-        if (D->getValue() == V && D->getVariable())
-          return D->getVariable()->getName();
-      }
-    }
-    return "";
-  }
+  // const std::string getDebugName(const Value* V) {
+  //   if (!isa<Constant>(V)) {
+  //     auto F = getFunction(V);
+  //     for (auto& I : instructions(F)) {
+  //       if (auto D = dyn_cast<DbgDeclareInst>(&I)) {
+  //         if (D->getAddress() == V && D->getVariable())
+  //           return D->getVariable()->getName();
+  //
+  //       } else if (auto D = dyn_cast<DbgValueInst>(&I)) {
+  //         if (D->getValue() == V && D->getVariable())
+  //           return D->getVariable()->getName();
+  //       }
+  //     }
+  //   }
+  //   return "";
+  // }
 }
 
 std::string Naming::get(const Value& V) {
@@ -238,8 +240,6 @@ std::string Naming::get(const Value& V) {
   } else if (isa<GlobalValue>(&V)) {
     // XXX is this a problem?
     assert( false && "Unexpected unnamed global vlaue." );
-
-  } else if ((name = getDebugName(&V)) != "") {
 
   } else if (isa<BasicBlock>(&V)) {
     name = freshBlockName();
