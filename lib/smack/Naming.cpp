@@ -7,6 +7,9 @@
 #include "llvm/IR/Type.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/Instructions.h"
+#include "llvm/IR/IntrinsicInst.h"
+#include "llvm/IR/DebugInfoMetadata.h"
+#include "llvm/IR/InstIterator.h"
 #include <sstream>
 
 namespace smack {
@@ -188,6 +191,38 @@ void Naming::reset() {
   varNum = 0;
 }
 
+namespace {
+  const Function* getFunction(const Value* V) {
+    if (const Instruction *I = dyn_cast<Instruction>(V))
+      return I->getParent()->getParent();
+    else if (const Argument *A = dyn_cast<Argument>(V))
+      return A->getParent();
+    else if (const BasicBlock *BB = dyn_cast<BasicBlock>(V))
+      return BB->getParent();
+
+    // XXX I know this looks bad, but it works for now
+    for (auto U : V->users())
+      return getFunction(U);
+
+    llvm_unreachable("Unexpected value.");
+  }
+
+  const std::string getDebugName(const Value* V) {
+    auto F = getFunction(V);
+    for (auto& I : instructions(F)) {
+      if (auto D = dyn_cast<DbgDeclareInst>(&I)) {
+        if (D->getAddress() == V && D->getVariable())
+          return D->getVariable()->getName();
+
+      } else if (auto D = dyn_cast<DbgValueInst>(&I)) {
+        if (D->getValue() == V && D->getVariable())
+          return D->getVariable()->getName();
+      }
+    }
+    return "";
+  }
+}
+
 std::string Naming::get(const Value& V) {
 
   if (names.count(&V))
@@ -203,6 +238,8 @@ std::string Naming::get(const Value& V) {
   } else if (isa<GlobalValue>(&V)) {
     // XXX is this a problem?
     assert( false && "Unexpected unnamed global vlaue." );
+
+  } else if ((name = getDebugName(&V)) != "") {
 
   } else if (isa<BasicBlock>(&V)) {
     name = freshBlockName();
