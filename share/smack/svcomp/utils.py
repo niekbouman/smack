@@ -12,42 +12,8 @@ from random_testing import random_test
 def svcomp_frontend(args):
   """Generate Boogie code from SVCOMP-style C-language source(s)."""
 
-  # enable static LLVM unroll pass
-  args.static_unroll = True
-  # disable dynamic execution
-  args.execute = False
-
   if len(args.input_files) > 1:
     raise RuntimeError("Expected a single SVCOMP input file.")
-
-  # check svcomp properties and set flags accordingly
-  svcomp_check_property(args)
-
-  # fix: disable float filter for memory safety benchmarks
-  if not args.memory_safety:
-    # test bv and executable benchmarks
-    file_type, executable = filters.svcomp_filter(args.input_files[0])
-    if file_type == 'bitvector':
-      args.bit_precise = True
-      args.bit_precise_pointers = True
-    if file_type == 'float' and not args.signed_integer_overflow:
-      #sys.exit(smack.top.results(args)['unknown'])
-      args.float = True
-      args.bit_precise = True
-      args.bit_precise_pointers = True
-      #args.verifier = 'boogie'
-      args.time_limit = 1000
-      args.unroll = 100
-    args.execute = executable
-  else:
-    with open(args.input_files[0], "r") as sf:
-      sc = sf.read()
-    if 'unsigned char b:2' in sc or "4294967294u" in sc:
-      args.bit_precise = True
-      #args.bit_precise_pointers = True
-
-  name, ext = os.path.splitext(os.path.basename(args.input_files[0]))
-  svcomp_process_file(args, name, ext)
 
   args.clang_options += " -DSVCOMP"
   args.clang_options += " -DAVOID_NAME_CONFLICTS"
