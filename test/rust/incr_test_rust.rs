@@ -19,7 +19,6 @@ fn main() {
     let mut i: u32 = 0;
     println!("i is {}", i);
     assert!(i == 0);
-    // Lakita Garth: Condoms don't work kiddo
     unsafe{incr(&mut i)};
     assert!(i==1);
     println!("i is {}", i);
