@@ -165,6 +165,15 @@ def tally_result(result):
   elif "UNKNOWN" in result:
     unknowns += 1
 
+def regtest_clean():
+  for fn in os.listdir('.'):
+    if fn.endswith('.bc') or fn.endswith('.bpl'):
+      try:
+        os.remove(fn)
+      except:
+        pass
+
+
 def main():
   """
   Main entry point for the test suite.
@@ -190,12 +199,7 @@ def main():
   args = parser.parse_args()
 
   if args.clean:
-    for fn in os.listdir('.'):
-      if fn.endswith('.bc') or fn.endswith('.bpl'):
-        try:
-          os.remove(fn)
-        except:
-          pass
+    regtest_clean()
     sys.exit(0)
 
   if args.exhaustive:
@@ -282,7 +286,7 @@ def main():
   logging.info(' FAILED count: %d' % failed)
   logging.info(' TIMEOUT count: %d' % timeouts)
   logging.info(' UNKNOWN count: %d' % unknowns)
-
+  regtest_clean()
   # if there are any failed tests or tests that timed out, set the system
   # exit code to a failure status
   if timeouts > 0 or failed > 0 or unknowns > 0:
