@@ -1,7 +1,8 @@
 #[macro_use]
 mod smack;
 use smack::*;
-
+// @flag --no-memory-splitting --unroll=10
+// @expect error
 fn main() {
   let mut a = 1;
   for i in 1..7 as u64 {

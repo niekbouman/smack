@@ -1,7 +1,7 @@
 #[macro_use]
 mod smack;
 use smack::*;
-
+// @expect verified
 use std::ops::{Add, AddAssign};
 
 #[derive(PartialEq,Clone,Copy)]

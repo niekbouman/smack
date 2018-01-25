@@ -1,7 +1,8 @@
 #[macro_use]
 mod smack;
 use smack::*;
-
+// @flag --unroll=10
+// @expect error
 fn main() {
   let bound = 7;
   let mut a = 0;

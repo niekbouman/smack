@@ -3,7 +3,7 @@ mod smack;
 use smack::*;
 
 // @flag --no-memory-splitting
-// @expect verified
+// @expect error
 
 fn call_with_one<F>(mut some_closure: F) -> ()
   where F : FnMut(i32) -> () {
@@ -19,5 +19,5 @@ fn main() {
     add_num(5);
     call_with_one(&mut add_num);
   }
-  assert_eq!(11, num);
+  assert_eq!(10, num); // Should be 11
 }

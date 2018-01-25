@@ -1,6 +1,7 @@
 #[macro_use]
 mod smack;
 use smack::*;
+// @expect verified
 
 fn main() {
   let a = 6i32.nondet();

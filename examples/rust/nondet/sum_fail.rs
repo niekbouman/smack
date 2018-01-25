@@ -1,7 +1,8 @@
 #[macro_use]
 mod smack;
 use smack::*;
-
+// @flag --no-memory-splitting --unroll=10
+// @expect error
 fn main() {
   let mut sum = 0;
   let b = 7u64.nondet();

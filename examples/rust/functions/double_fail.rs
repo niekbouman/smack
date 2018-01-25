@@ -2,6 +2,8 @@
 mod smack;
 use smack::*;
 
+// @expect error
+
 fn double(a: u32) -> u32 {
   a * 2
 }

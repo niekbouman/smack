@@ -2,6 +2,8 @@
 mod smack;
 use smack::*;
 
+// @expect verified
+
 fn double(a: u32) -> u32 {
   a * 2
 }

@@ -1,7 +1,8 @@
 #[macro_use]
 mod smack;
 use smack::*;
-
+// @flag --unroll=10
+// @expect verified
 fn fib(x: u64) -> u64 {
   match x {
     0 => 1,

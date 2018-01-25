@@ -1,6 +1,7 @@
 #[macro_use]
 mod smack;
 use smack::*;
+// @expect error
 
 fn main() {
   let a = 2;

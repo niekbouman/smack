@@ -1,7 +1,7 @@
 #[macro_use]
 mod smack;
 use smack::*;
-
+// @expect verified
 fn safe_div(x: u64, y: u64) -> Option<u64> {
   if y != 0 {
     Some(x/y)

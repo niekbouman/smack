@@ -1,6 +1,7 @@
 #[macro_use]
 mod smack;
 use smack::*;
+// @expect error
 
 fn main() {
   let a = 6i32.nondet();
@@ -10,5 +11,5 @@ fn main() {
   let x = a * b;
   assert!(!(x==30 || x==35 || x==40 || 
             x==36 || x==48 || x==42 || 
-            x==49 || x==56)); // a*b != anythin allowed
+            x==49 || x==56)); // a*b != anything allowed
 }
