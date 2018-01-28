@@ -98,21 +98,21 @@ make_nondet!(u64, __VERIFIER_nondet_unsigned_long_long);
 use std::ptr::{self};
 use std::mem;
 use std::ops::{Deref, DerefMut};
-use std::marker::PhantomData;
 
-struct Unique<T> {
+#[derive(Default)]
+struct PhantomData<T: Default> {
+  _place_older: T,
+  _padding: u64
+}
+
+struct Unique<T: Default> {
   _marker: PhantomData<T>,    // For the drop checker
   ptr: *const T,              // *const for variance
 }
 
-// Deriving Send and Sync is safe because we are the Unique owners
-// of this data. It's like Unique<T> is "just" T.
-unsafe impl<T: Send> Send for Unique<T> {}
-unsafe impl<T: Sync> Sync for Unique<T> {}
-
-impl<T> Unique<T> {
+impl<T: Default> Unique<T> {
   pub fn new(ptr: *mut T) -> Self {
-    Unique { ptr: ptr, _marker: PhantomData }
+    Unique { ptr: ptr, _marker: Default::default() }
   }
 
   pub fn as_ptr(&self) -> *mut T {
@@ -120,12 +120,12 @@ impl<T> Unique<T> {
   }
 }
 
-struct RawVec<T> {
+struct RawVec<T: Default> {
   ptr: Unique<T>,
   cap: usize,
 }
 
-impl<T> RawVec<T> {
+impl<T: Default> RawVec<T> {
   fn new() -> Self {
     let elem_size = mem::size_of::<T>();
     let cap = 4;
@@ -145,18 +145,18 @@ impl<T> RawVec<T> {
   }
 }
 
-impl<T> Drop for RawVec<T> {
+impl<T: Default> Drop for RawVec<T> {
   fn drop(&mut self) {
     unsafe { free(self.ptr.ptr as *mut _) };
   }
 }
 
-pub struct Vec<T> {
+pub struct Vec<T: Default> {
   buf: RawVec<T>,
   len: usize,
 }
 
-impl<T> Vec<T> {
+impl<T: Default> Vec<T> {
   fn ptr(&self) -> *mut T { self.buf.ptr.as_ptr() }
 
   fn cap(&self) -> usize { self.buf.cap }
@@ -227,14 +227,14 @@ impl<T> Vec<T> {
   }
 }
 
-impl<T> Drop for Vec<T> {
+impl<T: Default> Drop for Vec<T> {
   fn drop(&mut self) {
     while let Some(_) = self.pop() {}
     // allocation is handled by RawVec
   }
 }
 
-impl<T> Deref for Vec<T> {
+impl<T: Default> Deref for Vec<T> {
   type Target = [T];
   fn deref(&self) -> &[T] {
     unsafe {
@@ -243,7 +243,7 @@ impl<T> Deref for Vec<T> {
   }
 }
 
-impl<T> DerefMut for Vec<T> {
+impl<T: Default> DerefMut for Vec<T> {
   fn deref_mut(&mut self) -> &mut [T] {
     unsafe {
       ::std::slice::from_raw_parts_mut(self.ptr(), self.len)
@@ -314,45 +314,24 @@ impl<T> DoubleEndedIterator for RawValIter<T> {
   }
 }
 
-pub struct IntoIter<T> {
+pub struct IntoIter<T: Default> {
   _buf: RawVec<T>, // we don't actually care about this. Just need it to live.
   iter: RawValIter<T>,
 }
 
-impl<T> Iterator for IntoIter<T> {
+impl<T: Default> Iterator for IntoIter<T> {
   type Item = T;
   fn next(&mut self) -> Option<T> { self.iter.next() }
   fn size_hint(&self) -> (usize, Option<usize>) { self.iter.size_hint() }
 }
 
-impl<T> DoubleEndedIterator for IntoIter<T> {
+impl<T: Default> DoubleEndedIterator for IntoIter<T> {
   fn next_back(&mut self) -> Option<T> { self.iter.next_back() }
 }
 
-impl<T> Drop for IntoIter<T> {
+impl<T: Default> Drop for IntoIter<T> {
   fn drop(&mut self) {
     for _ in &mut *self {}
   }
 }
 
-pub struct Drain<'a, T: 'a> {
-  vec: PhantomData<&'a mut Vec<T>>,
-  iter: RawValIter<T>,
-}
-
-impl<'a, T> Iterator for Drain<'a, T> {
-  type Item = T;
-  fn next(&mut self) -> Option<T> { self.iter.next_back() }
-  fn size_hint(&self) -> (usize, Option<usize>) { self.iter.size_hint() }
-}
-
-impl<'a, T> DoubleEndedIterator for Drain<'a, T> {
-  fn next_back(&mut self) -> Option<T> { self.iter.next_back() }
-}
-
-impl<'a, T> Drop for Drain<'a, T> {
-  fn drop(&mut self) {
-    // pre-drain the iter
-    for _ in &mut self.iter {}
-  }
-}
