@@ -1,4 +1,4 @@
-#[cfg(verifier = "smack")]
+1;95;0c#[cfg(verifier = "smack")]
 extern {
   pub fn __VERIFIER_assert(x: i32);
   pub fn __VERIFIER_assume(x: i32);
@@ -164,6 +164,7 @@ impl<T: Default> Vec<T> {
   pub fn new() -> Self {
     Vec { buf: RawVec::new(), len: 0 }
   }
+  
   pub fn push(&mut self, elem: T) {
     if self.len == self.cap() { self.buf.grow(); }
 
@@ -225,6 +226,9 @@ impl<T: Default> Vec<T> {
       }
     }
   }
+  pub fn len(&self) -> usize {
+    self.len
+  }
 }
 
 impl<T: Default> Drop for Vec<T> {
@@ -238,7 +242,7 @@ impl<T: Default> Deref for Vec<T> {
   type Target = [T];
   fn deref(&self) -> &[T] {
     unsafe {
-      ::std::slice::from_raw_parts(self.ptr(), self.len)
+      ::std::slice::from_raw_parts(self.buf.ptr.ptr, self.len)
     }
   }
 }
@@ -246,7 +250,7 @@ impl<T: Default> Deref for Vec<T> {
 impl<T: Default> DerefMut for Vec<T> {
   fn deref_mut(&mut self) -> &mut [T] {
     unsafe {
-      ::std::slice::from_raw_parts_mut(self.ptr(), self.len)
+      ::std::slice::from_raw_parts_mut(self.buf.ptr.ptr as *mut T, self.len)
     }
   }
 }
