@@ -646,7 +646,7 @@ def verify_bpl(args):
     print results(args)[result]
 
   else:
-    if result == 'error' or result == 'invalid-deref' or result == 'invalid-free' or result == 'invalid-memtrack' or result == 'overflow':
+    if result == 'error' or result == 'invalid-deref' or result == 'invalid-free' or result == 'invalid-memtrack' or result == 'overflow' or result == "rust_panic":
       error = error_trace(verifier_output, args)
 
       if args.error_file:
