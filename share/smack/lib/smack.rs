@@ -1,4 +1,4 @@
-1;95;0c#[cfg(verifier = "smack")]
+#[cfg(verifier = "smack")]
 extern {
   pub fn __VERIFIER_assert(x: i32);
   pub fn __VERIFIER_assume(x: i32);
@@ -339,3 +339,15 @@ impl<T: Default> Drop for IntoIter<T> {
   }
 }
 
+#[cfg(verifier = "smack")]
+#[macro_export]
+macro_rules! vec {
+  ( $val:expr ; $count:expr ) =>
+    ({
+      let mut result = Vec::new();
+      for _ in 0..$count as u64 {
+        result.push($val);
+      }
+      result
+    })
+}
