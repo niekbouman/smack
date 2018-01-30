@@ -166,13 +166,12 @@ impl<T: Default> Vec<T> {
   }
   
   pub fn push(&mut self, elem: T) {
-    if self.len == self.cap() { self.buf.grow(); }
+//    if self.len == self.cap() { self.buf.grow(); }
 
     unsafe {
       ptr::write(self.ptr().offset(self.len as isize), elem);
     }
 
-    // Can't fail, we'll OOM first.
     self.len += 1;
   }
 
@@ -345,8 +344,10 @@ macro_rules! vec {
   ( $val:expr ; $count:expr ) =>
     ({
       let mut result = Vec::new();
-      for _ in 0..$count as u64 {
+      let mut i = 0u64;
+      while i < $count {
         result.push($val);
+        i += 1;
       }
       result
     })
