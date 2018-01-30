@@ -613,6 +613,11 @@ void SmackInstGenerator::visitCallInst(llvm::CallInst& ci) {
 	     name.find("panic") != std::string::npos) {
     emit(Stmt::assert_(Expr::lit(false), {Attr::attr("rust_panic")}));
 
+  } else if (name.find("std") != std::string::npos &&
+	     name.find("panicking") != std::string::npos &&
+	     name.find("begin_panic") != std::string::npos) {
+    emit(Stmt::assert_(Expr::lit(false), {Attr::attr("rust_panic")}));
+
   } else if (name.find(Naming::VALUE_PROC) != std::string::npos) {
     emit(rep->valueAnnotation(ci));
 
