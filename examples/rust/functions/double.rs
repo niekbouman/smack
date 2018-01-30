@@ -9,7 +9,7 @@ fn double(a: u32) -> u32 {
 }
 
 fn main() {
-  let a = 2;
+  let a = 2u32.nondet();
   let b = double(a);
-  assert!(b == 4);
+  assert!(b == 2*a);
 }
