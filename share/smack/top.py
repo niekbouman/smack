@@ -130,6 +130,8 @@ def arguments():
   frontend_group.add_argument('--clang-options', metavar='OPTIONS', default='',
     help='additional compiler arguments (e.g., --clang-options="-w -g")')
 
+  frontend_group.add_argument('--rust-options', metavar='OPTIONS', default='',
+    help='additional compiler arguments for rust')
 
   translate_group = parser.add_argument_group('translation options')
 
@@ -310,6 +312,7 @@ def default_clang_compile_command(args, lib = False):
 def default_rust_compile_command(args):
   cmd = ['rustc', '-A', 'unused-imports', '-C', 'opt-level=0', '-C', 'no-prepopulate-passes', '-g',
          '--emit=llvm-bc', '--cfg', 'verifier="smack"']
+  cmd += args.rust_options.split()
   return cmd
 
 def build_libs(args):

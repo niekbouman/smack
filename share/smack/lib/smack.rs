@@ -100,7 +100,7 @@ use std::mem;
 use std::ops::{Deref, DerefMut};
 
 #[derive(Default)]
-struct PhantomData<T: Default> {
+pub struct PhantomData<T: Default> {
   _place_older: T,
   _padding: u64
 }
@@ -186,6 +186,22 @@ impl<T: Default> Vec<T> {
     }
   }
 
+  pub fn append(&mut self, other: &mut Vec<T>) {
+    let mut i: usize = 0;
+    let olen = other.len();
+    let mut drain = Vec::new();
+    while i < olen {
+      drain.push(other.pop().unwrap());
+      i += 1;
+    }
+    // Empty other
+    i = 0;
+    while i < olen {
+      self.push(drain.pop().unwrap());
+      i += 1;
+    }
+  }
+  
   pub fn insert(&mut self, index: usize, elem: T) {
     assert!(index <= self.len);
     if self.cap() == self.len { self.buf.grow(); }
@@ -227,6 +243,12 @@ impl<T: Default> Vec<T> {
   }
   pub fn len(&self) -> usize {
     self.len
+  }
+}
+
+impl <T: Default> Default for Vec<T> {
+  fn default() -> Self {
+    Vec::new()
   }
 }
 
@@ -350,5 +372,15 @@ macro_rules! vec {
         i += 1;
       }
       result
-    })
+    });
+  ( $( $xs:expr ),* ) => {
+    {
+      let mut result = Vec::new();
+      $(
+        result.push($xs);
+      )*
+      result
+    }
+  };
+  
 }
