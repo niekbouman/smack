@@ -47,9 +47,9 @@ fn main() {
 
   let q2 = swapem(p2);
   let q3 = swapem(p3);
-  assert!(q2.x != y2);
-  // assert!(q2.y == x2);
-  // assert!(q3.x == y3);
-  // assert!(q3.y == z3);
-  // assert!(q3.z == x3);
+  assert!(q2.x == y2);
+  assert!(q2.y == x2);
+  assert!(q3.x == y3);
+  assert!(q3.y == z3);
+  assert!(q3.z == x3);
 }
