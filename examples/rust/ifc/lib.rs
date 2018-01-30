@@ -23,28 +23,35 @@ use sec_vec::sec_vec::*;
 */
 fn main() {
 
-  let nd1 = 5;
-  let nd2 = 6;
-  let nd3 = 5;
-  let nd4 = 6;
+  let nd1 = 5u64.nondet();
+  let nd2 = 6u64.nondet();
+
+  let nd3 = 5u64.nondet();
+  let nd4 = 6u64.nondet();
+
+  // Maintain permission invariant
+  assume!(nd1 < nd2);  // Create permissions; nd1 is low authority
+                       // nd2 is high authority
+  assume!(nd3 < nd2);  // nd3 is used to read with low authority
+  assume!(nd4 == nd2); // nd4 is the high authority access
 
   let mut s = SecVec::new();
   let lsecret = svec![1,2,3 => nd1];
   let hsecret = svec![4,5,6 => nd2];
 
-  println!("Adding secrets");
+//  println!("Adding secrets");
   s.push(lsecret, nd1);
   s.update(0, hsecret, nd2);
 
 //  println!("s: {:?}", s);
 
-  println!("Reading secrets with low authority");
+//  println!("Reading secrets with low authority");
   match s.get(0, nd3) {
     None    => println!("Access forbidden"),
     Some(v) => check_label!(v,nd3)
   }
 
-  println!("Reading secrets with high authority");
+//  println!("Reading secrets with high authority");
   match s.get(0, nd4) {
     None      => println!("Access forbidden"),
     Some(sec) => {
