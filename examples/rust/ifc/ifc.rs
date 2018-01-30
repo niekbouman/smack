@@ -2,7 +2,8 @@
 #[macro_export]
 pub mod smack;
 use smack::*;
-
+// @flag --no-memory-splitting --rust-options '--cfg feature="verify"'
+// @expect verified
 pub mod label {
     use std::cmp::max;
     pub type Label = u64;
