@@ -159,7 +159,6 @@ int main(int argc, char **argv) {
   }
 
   //pass_manager.add(new llvm::StructRet());
-  pass_manager.add(new smack::IntegerPackingToStruct());
   pass_manager.add(new llvm::SimplifyEV());
   pass_manager.add(new llvm::SimplifyIV());
   pass_manager.add(new smack::ExtractContracts());
@@ -179,6 +178,7 @@ int main(int argc, char **argv) {
   }
 
   pass_manager.add(new smack::IntegerOverflowChecker());
+  pass_manager.add(new smack::IntegerPackingToStruct());
 
 
   if(smack::SmackOptions::AddTiming){

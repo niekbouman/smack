@@ -34,6 +34,7 @@ private:
   void detectPackingInLoad(llvm::LoadInst* li);
   void detectPackingInMemCpy(llvm::MemCpyInst* mci);
   void detectPacking(llvm::Function* F);
+  void tagInstruction(llvm::Instruction* I);
 };
 }
 

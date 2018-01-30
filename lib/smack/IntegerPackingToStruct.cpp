@@ -12,6 +12,7 @@
 #include "llvm/IR/InstIterator.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/InstIterator.h"
+#include "llvm/IR/Metadata.h"
 #include "smack/Debug.h"
 #include <algorithm>
 #include <utility>
@@ -67,7 +68,7 @@ bool IntegerPackingToStruct::isTypeEqual(Type* EA, Type* EB, unsigned size) {
   std::vector<TypeInfoT> ftb = flattenType(EB, 0);
   unsigned ts = std::min(fta.size(), ftb.size());
   unsigned as = 0;
-  for (unsigned i = 0; i < size && i < ts && as < size; ++i) {
+  for (unsigned i = 0; i < ts && as < size; ++i) {
     Type* ta = std::get<0>(fta[i]);
     Type* tb = std::get<0>(ftb[i]);
     unsigned oa = std::get<1>(fta[i]);
@@ -88,8 +89,11 @@ void IntegerPackingToStruct::detectPackingInLoad(LoadInst* li) {
     Type* EA = bi->getSrcTy()->getPointerElementType();
     Type* EB = bi->getDestTy()->getPointerElementType();
     if (isBox(getBasePointer(bi->getOperand(0)))
-        && !isTypeEqual(EA, EB,std::min(DL->getTypeStoreSize(EA), DL->getTypeStoreSize(EB))))
+        && !isTypeEqual(EA, EB,
+          std::min(DL->getTypeStoreSize(EA), DL->getTypeStoreSize(EB)))) {
       errs() << "Got one load: " << " in " << li->getFunction()->getName() << "\n";
+      tagInstruction(li);
+    }
   }
 }
 
@@ -100,8 +104,10 @@ void IntegerPackingToStruct::detectPackingInMemCpy(MemCpyInst* mci) {
     unsigned size = cast<ConstantInt>(mci->getLength())->getZExtValue();
     Type* DT = dest->getType()->getPointerElementType();
     Type* ST = src->getType()->getPointerElementType();
-    if (!isTypeEqual(DT, ST, size))
+    if (!isTypeEqual(DT, ST, size)) {
       errs() << "Got one memcpy: " << "in " << mci->getFunction()->getName() << "\n";
+      tagInstruction(getBox(src));
+    }
   }
 }
 
@@ -112,6 +118,11 @@ void IntegerPackingToStruct::detectPacking(Function* F) {
     else if (MemCpyInst* mci = dyn_cast<MemCpyInst>(&*I))
       detectPackingInMemCpy(mci);
   }
+}
+
+void IntegerPackingToStruct::tagInstruction(Instruction* I) {
+  LLVMContext& C = I->getContext();
+  I->setMetadata("packed-int", MDNode::get(C, ConstantAsMetadata::get(ConstantInt::getTrue(C))));
 }
 
 bool IntegerPackingToStruct::runOnModule(Module& M) {
