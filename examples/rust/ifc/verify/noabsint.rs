@@ -1,4 +1,7 @@
-use std::vec::Vec;
+//use std::vec::Vec;
+#[macro_use]
+//mod smack;
+use ::smack::*;
 
 pub type SVec<T> = Vec<T>;
 

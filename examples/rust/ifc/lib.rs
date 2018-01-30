@@ -1,6 +1,11 @@
+#[macro_use]
+#[macro_export]
+pub mod smack;
+use smack::*;
+
 pub mod label {
     use std::cmp::max;
-    pub type Label = u32;
+    pub type Label = u64;
     pub fn combine_labels(l1: Label, l2: Label) -> Label {
         max(l1,l2)
     }
@@ -31,7 +36,7 @@ fn main() {
   s.push(lsecret, nd1);
   s.update(0, hsecret, nd2);
 
-  println!("s: {:?}", s);
+//  println!("s: {:?}", s);
 
   println!("Reading secrets with low authority");
   match s.get(0, nd3) {
@@ -44,7 +49,7 @@ fn main() {
     None      => println!("Access forbidden"),
     Some(sec) => {
       check_label!(sec,nd4);
-      println!("Secret value: {:?}", sec);
+      //println!("Secret value: {:?}", sec);
     }
   }
 }

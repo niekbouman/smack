@@ -1,4 +1,6 @@
-use std::vec::Vec;
+//use std::vec::Vec;
+#[macro_use]
+use smack::*;
 
 use label::*;
 use verify::SVec;
@@ -6,13 +8,14 @@ use verify::SVec;
 type Secret = SVec<u32>;
 
 
-#[derive(Debug)]
+//#[derive(Debug)]
+#[derive(Default)]
 pub struct Labeled<V> {
   pub label: Label,
   val: V
 }
 
-#[derive(Debug)]
+//#[derive(Debug)]
 pub struct SecVec {
   m: Vec<Labeled<Secret>>
 }
