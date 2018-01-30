@@ -37,8 +37,13 @@ impl AddAssign for Point {
 }
 
 fn main() {
-  let a = Point::new(1,2);
-  let b = Point::new(3,4);
+  let w = 1u64.nondet();
+  let x = 2u64.nondet();
+  let y = 3u64.nondet();
+  let z = 4u64.nondet();
+
+  let a = Point::new(w,x);
+  let b = Point::new(y,z);
   let c = a + b;
-  assert!(c == Point::new(3,6));
+  assert!(c != Point::new(w+y,x+z));
 }
