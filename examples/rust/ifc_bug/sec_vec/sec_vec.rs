@@ -5,7 +5,7 @@ use smack::*;
 use label::*;
 use verify::SVec;
 
-type Secret = SVec<u32>;
+type Secret = SVec<u64>;
 
 
 //#[derive(Debug)]
@@ -52,7 +52,7 @@ impl SecVec {
     }
   }
 
-  //    pub fn take(&mut self, k:u32, l:Label) -> Option<Secret>/*l*/ {
+  //    pub fn take(&mut self, k:u64, l:Label) -> Option<Secret>/*l*/ {
   //        match self.m.remove(&k) {
   //            Some(v) => {
   //                let Labeled{label, val} = v;
@@ -78,7 +78,7 @@ Classified(V)
 use self::Document::*;
 
 pub struct StaticSecHashMap {
-    m: HashMap<u32,Document<Secret>>
+    m: HashMap<u64,Document<Secret>>
 }
 
 impl StaticSecHashMap {
@@ -88,7 +88,7 @@ impl StaticSecHashMap {
         }
     }
 
-    pub fn update_u(&mut self, k: u32, mut v: Secret) {
+    pub fn update_u(&mut self, k: u64, mut v: Secret) {
         match self.m.remove(&k) {
             Some(Classified(mut val)) => {
                 val.append(&mut v);
@@ -102,7 +102,7 @@ impl StaticSecHashMap {
         }
     }
 
-    pub fn update_c(&mut self, k: u32, mut v: Secret) {
+    pub fn update_c(&mut self, k: u64, mut v: Secret) {
         match self.m.remove(&k) {
             Some(Classified(mut val)) => {
                 val.append(&mut v);
@@ -116,14 +116,14 @@ impl StaticSecHashMap {
         }
     }
 
-    pub fn get_u(&self, k:u32) -> Option<&Secret> {
+    pub fn get_u(&self, k:u64) -> Option<&Secret> {
         match self.m.get(&k) {
             Some(&Unclassified(ref v)) => Some(&v),
             _                          => None
         }
     }
 
-    pub fn get_c(&self, k:u32) -> Option<&Secret> {
+    pub fn get_c(&self, k:u64) -> Option<&Secret> {
         match self.m.get(&k) {
             Some(&Unclassified(ref v)) => Some(&v),
             Some(&Classified(ref v))   => Some(&v),

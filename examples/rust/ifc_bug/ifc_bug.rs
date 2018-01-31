@@ -3,7 +3,7 @@
 pub mod smack;
 use smack::*;
 // @flag --no-memory-splitting --rust-options '--cfg feature="verify"'
-// @expect verified
+// @expect error
 pub mod label {
     use std::cmp::max;
     pub type Label = u64;
@@ -35,8 +35,8 @@ fn main() {
                        // nd2 is high authority
   assume!(nd3 < nd2);  // nd3 is used to read with low authority
   assume!(nd4 == nd2); // nd4 is the high authority access
-
   let mut s = SecVec::new();
+
   let lsecret = svec![1,2,3 => nd1];
   let hsecret = svec![4,5,6 => nd2];
 
@@ -48,14 +48,15 @@ fn main() {
 
 //  println!("Reading secrets with low authority");
   match s.get(0, nd3) {
-    None    => println!("Access forbidden"),
-    Some(v) => check_label!(v,nd3)
+    None    => assert!(true),//println!("Access forbidden"),
+    Some(v) => assert!(false)//check_label!(v,nd3) // Access erroneously allowed
   }
 
 //  println!("Reading secrets with high authority");
   match s.get(0, nd4) {
-    None      => println!("Access forbidden"),
+    None      => assert!(false),//println!("Access forbidden"), // Access should be not be forbidden
     Some(sec) => {
+      assert!(true); // Accessed correctly
       check_label!(sec,nd4);
       //println!("Secret value: {:?}", sec);
     }
