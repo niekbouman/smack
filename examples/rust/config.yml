@@ -1,7 +1,7 @@
 verifiers: [corral]
 memory: [no-reuse-impls, no-reuse, reuse]
-time-limit: 300
-memory-limit: 450
+time-limit: 1200
+memory-limit: 1024
 flags: []
 checkbpl: []
 checkout: []
