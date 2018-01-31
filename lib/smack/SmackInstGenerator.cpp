@@ -449,7 +449,15 @@ void SmackInstGenerator::visitLoadInst(llvm::LoadInst& li) {
     E = rep->load(P);
   }
 
-  emit(Stmt::assign(rep->expr(&li), E));
+  if (li.getMetadata("packed-int") && T->getElementType()->isIntegerTy()) {
+    IntegerType* origTy = cast<IntegerType>(T->getElementType());
+    IntegerType* atomTy = IntegerType::get(origTy->getContext(), origTy->getBitWidth() >> 1);
+    auto L1 = rep->load(P, atomTy, rep->expr(P));
+    auto L2 = rep->load(P, atomTy, rep->pa(rep->expr(P), atomTy->getBitWidth() >> 3));
+    emit(Stmt::assume(Expr::eq(Expr::fn(Naming::EXTRACT_VALUE, rep->expr(&li), Expr::lit(0U)), L1)));
+    emit(Stmt::assume(Expr::eq(Expr::fn(Naming::EXTRACT_VALUE, rep->expr(&li), Expr::lit(1U)), L2)));
+  } else
+    emit(Stmt::assign(rep->expr(&li), E));
 
   if (SmackOptions::MemoryModelDebug) {
     emit(Stmt::call(Naming::REC_MEM_OP, {Expr::id(Naming::MEM_OP_VAL)}));
@@ -471,7 +479,16 @@ void SmackInstGenerator::visitStoreInst(llvm::StoreInst& si) {
     auto E = Expr::fn(D->getName(), {M, rep->expr(P), rep->expr(V)});
     emit(Stmt::assign(M, E));
   } else {
-    emit(rep->store(P,V));
+    const AllocaInst* ai = dyn_cast<const AllocaInst>(P->stripPointerCasts());
+    if (ai && ai->getMetadata("packed-int") && V->getType()->isIntegerTy()) {
+      IntegerType* origTy = cast<IntegerType>(V->getType());
+      IntegerType* atomTy = IntegerType::get(origTy->getContext(), origTy->getBitWidth() >> 1);
+      auto P1 = rep->expr(P);
+      auto P2 = rep->pa(rep->expr(P), atomTy->getBitWidth() >> 3);
+      emit(rep->store(P, Expr::fn(Naming::EXTRACT_VALUE, rep->expr(V), Expr::lit(0U)), atomTy, P1));
+      emit(rep->store(P, Expr::fn(Naming::EXTRACT_VALUE, rep->expr(V), Expr::lit(1U)), atomTy, P2));
+    } else
+      emit(rep->store(P,V));
   }
 
   if (SmackOptions::SourceLocSymbols) {

@@ -516,13 +516,17 @@ const Stmt* SmackRep::returnValueAnnotation(const CallInst& CI) {
 const Expr* SmackRep::load(const llvm::Value* P) {
   const PointerType* T = dyn_cast<PointerType>(P->getType());
   assert(T && "Expected pointer type.");
+  return load(P, T->getElementType(), SmackRep::expr(P));
+}
+
+const Expr* SmackRep::load(const Value* P, Type* ET, const Expr* ptrExpr) {
   const unsigned R = regions->idx(P);
   bool bytewise = regions->get(R).bytewiseAccess();
   bool singleton = regions->get(R).isSingleton();
   const Expr* M = Expr::id(memPath(R));
   std::string N = Naming::LOAD + "." + (bytewise ? "bytes." : "") +
-    type(T->getElementType());
-  return singleton ? M : Expr::fn(N, M, SmackRep::expr(P));
+    type(ET);
+  return singleton ? M : Expr::fn(N, M, ptrExpr);
 }
 
 const Stmt* SmackRep::store(const Value* P, const Value* V) {
@@ -532,7 +536,11 @@ const Stmt* SmackRep::store(const Value* P, const Value* V) {
 const Stmt* SmackRep::store(const Value* P, const Expr* V) {
   const PointerType* T = dyn_cast<PointerType>(P->getType());
   assert(T && "Expected pointer type.");
-  return store(regions->idx(P), T->getElementType(), expr(P), V);
+  return store(P, V, T->getElementType(), expr(P));
+}
+
+const Stmt* SmackRep::store(const Value* P, const Expr* V, Type* ET, const Expr* ptrExpr) {
+  return store(regions->idx(P), ET, ptrExpr, V);
 }
 
 const Stmt* SmackRep::store(unsigned R, const Type* T,

@@ -41,6 +41,7 @@
 #include "smack/MemorySafetyChecker.h"
 #include "smack/IntegerOverflowChecker.h"
 #include "smack/SplitAggregateValue.h"
+#include "smack/IntegerPackingToStruct.h"
 
 static llvm::cl::opt<std::string>
 InputFilename(llvm::cl::Positional, llvm::cl::desc("<input LLVM bitcode file>"),
@@ -177,6 +178,7 @@ int main(int argc, char **argv) {
   }
 
   pass_manager.add(new smack::IntegerOverflowChecker());
+  pass_manager.add(new smack::IntegerPackingToStruct());
 
 
   if(smack::SmackOptions::AddTiming){

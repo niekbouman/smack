@@ -58,7 +58,6 @@ private:
 
   const Expr* pa(const Expr* base, long long index, unsigned long size);
   const Expr* pa(const Expr* base, const Expr* index, unsigned long size);
-  const Expr* pa(const Expr* base, unsigned long offset);
   const Expr* pa(const Expr* base, const Expr* index, const Expr* size);
   const Expr* pa(const Expr* base, const Expr* offset);
 
@@ -111,6 +110,7 @@ public:
   const Expr* ptrArith(const llvm::GetElementPtrInst* I);
   const Expr* ptrArith(const llvm::ConstantExpr* CE);
   const Expr* ptrArith(const llvm::Value* p, std::vector< std::pair<llvm::Value*,llvm::Type*> > args);
+  const Expr* pa(const Expr* base, unsigned long offset);
 
   const Expr* expr(const llvm::Value* v, bool isConstIntUnsigned=false);
 
@@ -131,8 +131,10 @@ public:
   const Stmt* memcpy(const llvm::MemCpyInst& msi);
   const Stmt* memset(const llvm::MemSetInst& msi);
   const Expr* load(const llvm::Value* P);
+  const Expr* load(const llvm::Value* P, llvm::Type* ET, const Expr* ptrExpr);
   const Stmt* store(const llvm::Value* P, const llvm::Value* V);
   const Stmt* store(const llvm::Value* P, const Expr* V);
+  const Stmt* store(const llvm::Value* P, const Expr* V, llvm::Type* ET, const Expr* ptrExpr);
 
   const Stmt* valueAnnotation(const llvm::CallInst& CI);
   const Stmt* returnValueAnnotation(const llvm::CallInst& CI);
