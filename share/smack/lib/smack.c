@@ -62,6 +62,10 @@ void exit(int x) {
   while(1);
 }
 
+void* __VERIFIER_memcpy(void* dest, const void* src, size_t count) {
+  return memcpy(dest, src, count);
+}
+
 char __VERIFIER_nondet_char(void) {
   char x = __SMACK_nondet_char();
   __VERIFIER_assume(x >= SCHAR_MIN && x <= SCHAR_MAX);
