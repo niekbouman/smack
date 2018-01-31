@@ -1,8 +1,8 @@
 #[macro_use]
 mod smack;
 use smack::*;
-@ flag --no-memory-splitting --unroll=3
-@ expect verified
+// @flag --no-memory-splitting --unroll=3
+// @expect error
 fn main() {
    let mut v1:Vec<u64> = vec![0,1,2];
    let mut v2:Vec<u64> = vec![3,4];
