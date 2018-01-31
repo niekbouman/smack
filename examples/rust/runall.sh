@@ -27,11 +27,6 @@ echo "Running ifc_bug"
 
 echo
 echo "-----------------------------------------------------------------------"
-echo "Running ifc_bug"
-./regtest.py --folder ifc_bug
-
-echo
-echo "-----------------------------------------------------------------------"
 echo "Running loops"
 ./regtest.py --folder loops
 
