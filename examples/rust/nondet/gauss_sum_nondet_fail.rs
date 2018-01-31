@@ -10,5 +10,5 @@ fn main() {
   for i in 0..b as u64 {
     sum += i;
   }
-  assert!(sum != b*(b-1)/2);
+  assert!(2*sum != b*(b-1));
 }
