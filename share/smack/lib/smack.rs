@@ -136,7 +136,7 @@ struct RawVec<T: Default> {
 impl<T: Default> RawVec<T> {
   fn new() -> Self {
     let elem_size = mem::size_of::<T>();
-    let cap = 4;
+    let cap = 32;
     let ptr = unsafe { Unique::new(malloc(cap*elem_size) as *mut T) };
     RawVec { ptr: ptr, cap: cap }
   }
