@@ -11,7 +11,7 @@ extern {
   pub fn __VERIFIER_nondet_signed_long_long() -> i64;
   pub fn __VERIFIER_nondet_unsigned_long_long() -> u64;
   pub fn malloc(size: usize) -> *mut u8;
-  pub fn realloc(ptr: *mut u8, new_size: usize) -> *mut u8;
+  pub fn __VERIFIER_memcpy(dest: *mut u8, src: *mut u8, count:usize) -> *mut u8;
   pub fn free(ptr: *mut u8);
 }
 
@@ -95,6 +95,14 @@ make_nondet!(u64, __VERIFIER_nondet_unsigned_long_long);
 
 /* Vector class.
    Based on https://doc.rust-lang.org/nomicon/vec-final.html */
+fn sized_realloc(orig_ptr: *mut u8, orig_size: usize, new_size: usize) -> *mut u8 {
+  unsafe {
+    let result: *mut u8 = malloc(new_size);
+    __VERIFIER_memcpy(result, orig_ptr, orig_size);
+    result
+  }
+}
+
 use std::ptr::{self};
 use std::mem;
 use std::ops::{Deref, DerefMut};
@@ -137,7 +145,7 @@ impl<T: Default> RawVec<T> {
     unsafe {
       let elem_size = mem::size_of::<T>();
       let new_cap = 2 * self.cap;
-      let ptr = realloc(self.ptr.as_ptr() as *mut _, new_cap*elem_size);
+      let ptr = sized_realloc(self.ptr.as_ptr() as *mut _, self.cap*elem_size, new_cap*elem_size);
 
       self.ptr = Unique::new(ptr as *mut _);
       self.cap = new_cap;
@@ -166,7 +174,7 @@ impl<T: Default> Vec<T> {
   }
   
   pub fn push(&mut self, elem: T) {
-//    if self.len == self.cap() { self.buf.grow(); }
+    if self.len == self.cap() { self.buf.grow(); }
 
     unsafe {
       ptr::write(self.ptr().offset(self.len as isize), elem);
