@@ -48,14 +48,14 @@ fn main() {
 
 //  println!("Reading secrets with low authority");
   match s.get(0, nd3) {
-    None    => println!("Access forbidden"),
-    Some(v) => check_label!(v,nd3)
+    None    => assert!(true), // println!("Access forbidden"), // Correcly reject access
+    Some(v) => assert!(false) // check_label!(v,nd3), // Incorrectly allow access
   }
 
 //  println!("Reading secrets with high authority");
   match s.get(0, nd4) {
-    None      => println!("Access forbidden"),
-    Some(sec) => {
+    None      => assert!(false), // println!("Access forbidden"), // Rejected proper access
+    Some(sec) => {assert!(true); // Correctly grant access
       check_label!(sec,nd4);
       //println!("Secret value: {:?}", sec);
     }
