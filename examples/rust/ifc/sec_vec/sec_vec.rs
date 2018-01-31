@@ -31,14 +31,19 @@ impl SecVec {
     self.m.push(Labeled{label:l, val:v})
   }
 
-  pub fn update(&mut self, k: usize, mut v: Secret /*l*/, l:Label) {
-    match self.m.get_mut(k) {
+  pub fn update(&mut self, k: usize, mut v: Secret /*l*/, l:Label) { 
+    if k < self.m.len() {
+      let ref mut old = self.m[k];
+      old.val.append(&mut v);
+      old.label = combine_labels(l, old.label);
+    }
+    /*match self.m.get_mut(k) {
       Some(old) => {
 	old.val.append(&mut v);
 	old.label = combine_labels(l, old.label);
       },
       None    => {}
-    }
+    }*/
   }
 
   pub fn get(&self, k:usize, l:Label) -> Option<&Secret>/*l*/ {
