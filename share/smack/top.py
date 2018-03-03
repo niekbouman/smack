@@ -9,6 +9,7 @@ import shutil
 import sys
 import shlex
 import subprocess
+import struct
 from svcomp.utils import svcomp_frontend
 from svcomp.utils import verify_bpl_svcomp
 from utils import temporary_file, try_command, remove_temp_files
@@ -590,9 +591,44 @@ def error_step(step):
           if src:
             return "%s%s(%s,%s): %s" % (step.group(1), src.group(1), src.group(2), src.group(3), message)
     else:
-      return step.group(0)
+      return corral_error_step(step.group(0))
   else:
     return None
+
+def reformat_assignment(line):
+  def repl(m):
+    val = m.group(1)
+    if 'bv' in val:
+      return m.group(2)+'UL'
+    else:
+      sig_size = int(m.group(6)) - 1
+      exp_size = int(m.group(7))
+      sign_val = int(m.group(3) != '')*(2**(sig_size+exp_size))
+      sig_val = int(m.group(4))
+      exp_val = int(m.group(5))*(2**sig_size)
+      float_val = sign_val+exp_val+sig_val
+      bw = 1 + sig_size + exp_size
+      if bw == 32:
+        return str(struct.unpack('f', struct.pack('I',float_val))[0])
+      elif bw == 64:
+        return str(struct.unpack('d', struct.pack('Q',float_val))[0])
+      else:
+        return val
+  return re.sub('((\d+)bv\d+|(-?)(\d+)e(\d+)f(\d+)e(\d+))', repl, line.strip())
+
+def transform(info):
+  return ','.join(map(reformat_assignment, filter(
+    lambda x: not re.search('((CALL|RETURN from)\s+(\$|__SMACK))|Done|ASSERTION', x), info.split(','))))
+
+def corral_error_step(step):
+  m = re.match('([^\s]*)\s+Trace:\s+(Thread=\d+)\s+\((.*)[\)|;]', step)
+  if m:
+    path = m.group(1)
+    tid = m.group(2)
+    info = transform(m.group(3))
+    return '{0}\t{1}  {2}'.format(path,tid,info)
+  else:
+    return step
 
 def error_trace(verifier_output, args):
   trace = ""
