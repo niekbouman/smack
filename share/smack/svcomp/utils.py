@@ -319,7 +319,15 @@ def verify_bpl_svcomp(args):
   command += ["/maxStaticLoopBound:%d" % staticLoopBound]
   command += ["/recursionBound:65536"]
   command += ["/irreducibleLoopUnroll:2"]
-  command += ["/trackAllVars"]
+#  command += ["/trackAllVars"]
+
+  # Ankit's params
+  command += ["/di"]
+  command += ["/staticInlining"]
+  command += ["/bopt:z3opt:SMT.MBQI=true"]
+  command += ["/bopt:z3opt:SMT.MBQI.MAX_ITERATIONS=4297"]
+  command += ["/deepAsserts"]
+  command += ["/doNotUseLabels"]
 
   verifier_output = smack.top.try_command(command, timeout=time_limit)
   result = smack.top.verification_result(verifier_output)
