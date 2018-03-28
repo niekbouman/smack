@@ -323,7 +323,7 @@ def verify_bpl_svcomp(args):
 
   # Ankit's params
   command += ["/di"]
-  command += ["/staticInlining"]
+#  command += ["/staticInlining"]
   command += ["/bopt:z3opt:SMT.MBQI=true"]
   command += ["/bopt:z3opt:SMT.MBQI.MAX_ITERATIONS=4297"]
   command += ["/deepAsserts"]
