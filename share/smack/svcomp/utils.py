@@ -230,8 +230,8 @@ def verify_bpl_svcomp(args):
       corral_command += ["/cooperative"]
   else:
     corral_command += ["/k:1"]
-    if not (args.memory_safety or args.bit_precise):
-      corral_command += ["/di"]
+#    if not (args.memory_safety or args.bit_precise):
+#      corral_command += ["/di"]
 
   # we are not modeling strcpy
   if args.pthread and "strcpy" in bpl:
@@ -316,18 +316,13 @@ def verify_bpl_svcomp(args):
   command = list(corral_command)
   command += ["/timeLimit:%s" % time_limit]
   command += ["/v:1"]
-#  command += ["/maxStaticLoopBound:%d" % staticLoopBound]
-#  command += ["/recursionBound:65536"]
+  command += ["/maxStaticLoopBound:%d" % staticLoopBound]
+  command += ["/recursionBound:65536"]
   command += ["/irreducibleLoopUnroll:2"]
 #  command += ["/trackAllVars"]
 
-  # Ankit's params
-  command += ["/di"]
-#  command += ["/staticInlining"]
-  command += ["/bopt:z3opt:SMT.MBQI=true"]
-  command += ["/bopt:z3opt:SMT.MBQI.MAX_ITERATIONS=4297"]
-  command += ["/deepAsserts"]
-  command += ["/doNotUseLabels"]
+  if args.verifier_options:
+    command += args.verifier_options.split()
 
   verifier_output = smack.top.try_command(command, timeout=time_limit)
   result = smack.top.verification_result(verifier_output)
