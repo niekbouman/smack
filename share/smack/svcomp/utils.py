@@ -215,6 +215,11 @@ def verify_bpl_svcomp(args):
   corral_command += ["/tryCTrace", "/noTraceOnDisk", "/printDataValues:1"]
   corral_command += ["/useProverEvaluate", "/cex:1"]
 
+  symb_command = ['symbooglix']
+  symb_command += [args.bpl_file]
+  symb_command += ["--file-logging=0"]
+  symb_command += ["--entry-points=%s" % ",".join(args.entry_points)]
+
   with open(args.bpl_file, "r") as f:
     bpl = f.read()
 
@@ -313,6 +318,9 @@ def verify_bpl_svcomp(args):
   else:
     time_limit = 880
 
+  symb_command += ["--timeout=%d" % time_limit]
+  symb_command += ["--max-loop-depth=%d" % loopUnrollBar]
+
   command = list(corral_command)
   command += ["/timeLimit:%s" % time_limit]
   command += ["/v:1"]
@@ -321,6 +329,7 @@ def verify_bpl_svcomp(args):
   command += ["/irreducibleLoopUnroll:2"]
   command += ["/trackAllVars"]
 
+  command = list(symb_command)
   verifier_output = smack.top.try_command(command, timeout=time_limit)
   result = smack.top.verification_result(verifier_output)
 
