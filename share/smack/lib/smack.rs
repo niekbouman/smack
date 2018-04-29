@@ -95,6 +95,7 @@ make_nondet!(u64, __VERIFIER_nondet_unsigned_long_long);
 
 /* Vector class.
    Based on https://doc.rust-lang.org/nomicon/vec-final.html */
+#[cfg(verifier = "smack")]
 fn sized_realloc(orig_ptr: *mut u8, orig_size: usize, new_size: usize) -> *mut u8 {
   unsafe {
     let result: *mut u8 = malloc(new_size);
@@ -107,17 +108,20 @@ use std::ptr::{self};
 use std::mem;
 use std::ops::{Deref, DerefMut};
 
+#[cfg(verifier = "smack")]
 #[derive(Default)]
 pub struct PhantomData<T: Default> {
   _place_older: T,
   _padding: u64
 }
 
+#[cfg(verifier = "smack")]
 struct Unique<T: Default> {
   _marker: PhantomData<T>,    // For the drop checker
   ptr: *const T,              // *const for variance
 }
 
+#[cfg(verifier = "smack")]
 impl<T: Default> Unique<T> {
   pub fn new(ptr: *mut T) -> Self {
     Unique { ptr: ptr, _marker: Default::default() }
@@ -128,11 +132,13 @@ impl<T: Default> Unique<T> {
   }
 }
 
+#[cfg(verifier = "smack")]
 struct RawVec<T: Default> {
   ptr: Unique<T>,
   cap: usize,
 }
 
+#[cfg(verifier = "smack")]
 impl<T: Default> RawVec<T> {
   fn new() -> Self {
     let elem_size = mem::size_of::<T>();
@@ -153,17 +159,20 @@ impl<T: Default> RawVec<T> {
   }
 }
 
+#[cfg(verifier = "smack")]
 impl<T: Default> Drop for RawVec<T> {
   fn drop(&mut self) {
     unsafe { free(self.ptr.ptr as *mut _) };
   }
 }
 
+#[cfg(verifier = "smack")]
 pub struct Vec<T: Default> {
   buf: RawVec<T>,
   len: usize,
 }
 
+#[cfg(verifier = "smack")]
 impl<T: Default> Vec<T> {
   fn ptr(&self) -> *mut T { self.buf.ptr.as_ptr() }
 
@@ -173,7 +182,8 @@ impl<T: Default> Vec<T> {
     Vec { buf: RawVec::new(), len: 0 }
   }
   
-  pub fn push(&mut self, elem: T) {
+
+    pub fn push(&mut self, elem: T) {
     if self.len == self.cap() { self.buf.grow(); }
 
     unsafe {
@@ -254,12 +264,14 @@ impl<T: Default> Vec<T> {
   }
 }
 
+#[cfg(verifier = "smack")]
 impl <T: Default> Default for Vec<T> {
   fn default() -> Self {
     Vec::new()
   }
 }
 
+#[cfg(verifier = "smack")]
 impl<T: Default> Drop for Vec<T> {
   fn drop(&mut self) {
     while let Some(_) = self.pop() {}
@@ -267,6 +279,7 @@ impl<T: Default> Drop for Vec<T> {
   }
 }
 
+#[cfg(verifier = "smack")]
 impl<T: Default> Deref for Vec<T> {
   type Target = [T];
   fn deref(&self) -> &[T] {
@@ -276,6 +289,7 @@ impl<T: Default> Deref for Vec<T> {
   }
 }
 
+#[cfg(verifier = "smack")]
 impl<T: Default> DerefMut for Vec<T> {
   fn deref_mut(&mut self) -> &mut [T] {
     unsafe {
@@ -284,11 +298,13 @@ impl<T: Default> DerefMut for Vec<T> {
   }
 }
 
+#[cfg(verifier = "smack")]
 struct RawValIter<T> {
   start: *const T,
   end: *const T,
 }
 
+#[cfg(verifier = "smack")]
 impl<T> RawValIter<T> {
   unsafe fn new(slice: &[T]) -> Self {
     RawValIter {
@@ -304,6 +320,7 @@ impl<T> RawValIter<T> {
   }
 }
 
+#[cfg(verifier = "smack")]
 impl<T> Iterator for RawValIter<T> {
   type Item = T;
   fn next(&mut self) -> Option<T> {
@@ -330,6 +347,7 @@ impl<T> Iterator for RawValIter<T> {
   }
 }
 
+#[cfg(verifier = "smack")]
 impl<T> DoubleEndedIterator for RawValIter<T> {
   fn next_back(&mut self) -> Option<T> {
     if self.start == self.end {
@@ -347,21 +365,25 @@ impl<T> DoubleEndedIterator for RawValIter<T> {
   }
 }
 
+#[cfg(verifier = "smack")]
 pub struct IntoIter<T: Default> {
   _buf: RawVec<T>, // we don't actually care about this. Just need it to live.
   iter: RawValIter<T>,
 }
 
+#[cfg(verifier = "smack")]
 impl<T: Default> Iterator for IntoIter<T> {
   type Item = T;
   fn next(&mut self) -> Option<T> { self.iter.next() }
   fn size_hint(&self) -> (usize, Option<usize>) { self.iter.size_hint() }
 }
 
+#[cfg(verifier = "smack")]
 impl<T: Default> DoubleEndedIterator for IntoIter<T> {
   fn next_back(&mut self) -> Option<T> { self.iter.next_back() }
 }
 
+#[cfg(verifier = "smack")]
 impl<T: Default> Drop for IntoIter<T> {
   fn drop(&mut self) {
     for _ in &mut *self {}
@@ -389,6 +411,22 @@ macro_rules! vec {
       )*
       result
     }
-  };
-  
+  };  
+}
+
+#[cfg(verifier = "smack")]
+pub struct String {
+    backing_store: Vec<u8>,
+}
+
+#[cfg(verifier = "smack")]
+impl String {
+  pub fn from(s: &str) -> String {
+    let mut bs = vec![];
+    let bytes = s.as_bytes();  
+    for i in 0..bytes.len() {
+      bs.push(bytes[i]);
+    }
+    String{backing_store: bs}
+  }      
 }
