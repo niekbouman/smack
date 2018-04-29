@@ -147,7 +147,14 @@ impl<T: Default> RawVec<T> {
     RawVec { ptr: ptr, cap: cap }
   }
 
-  fn grow(&mut self) {
+
+  fn new_with_capacity(cap: usize) -> Self {
+    let elem_size = mem::size_of::<T>();
+    let ptr = unsafe { Unique::new(malloc(cap*elem_size) as *mut T) };
+    RawVec { ptr: ptr, cap: cap }
+  }
+
+    fn grow(&mut self) {
     unsafe {
       let elem_size = mem::size_of::<T>();
       let new_cap = 2 * self.cap;
@@ -181,9 +188,13 @@ impl<T: Default> Vec<T> {
   pub fn new() -> Self {
     Vec { buf: RawVec::new(), len: 0 }
   }
+
+  pub fn with_capacity(cap: usize) -> Self {
+    Vec { buf: RawVec::new_with_capacity(cap), len: 0 }
+  }
   
 
-    pub fn push(&mut self, elem: T) {
+  pub fn push(&mut self, elem: T) {
     if self.len == self.cap() { self.buf.grow(); }
 
     unsafe {
@@ -423,10 +434,53 @@ pub struct String {
 impl String {
   pub fn from(s: &str) -> String {
     let mut bs = vec![];
-    let bytes = s.as_bytes();  
-    for i in 0..bytes.len() {
-      bs.push(bytes[i]);
-    }
+    // let bytes = s.as_bytes();  
+    // for i in 0..bytes.len() {
+    //   bs.push(bytes[i]);
+    // }
     String{backing_store: bs}
-  }      
+  }
+  pub fn from_i64(i: i64) -> String {
+      String::from("")
+  }
+}
+
+#[cfg(verifier = "smack")]
+impl Default for String {
+  fn default() -> String {
+    String{backing_store: vec![]}
+  }
+}
+
+#[cfg(verifier = "smack")]
+impl Clone for String {
+    fn clone(&self) -> Self {
+        let mut new_bs = vec![];
+        for x in self.backing_store.iter() {
+            new_bs.push(*x);
+        }
+        String {backing_store: new_bs}
+  }
+}
+
+#[cfg(verifier = "smack")]
+impl String {
+    pub fn get(&self, idx: usize) -> char {
+        self.backing_store[idx] as char
+    }
+}
+
+#[cfg(verifier = "smack")]
+struct Box<T: Default> {
+    ptr: Unique<T>
+}
+
+#[cfg(verifier = "smack")]
+impl<T: Default> Box<T> {
+    fn new(item: T) -> Box<T> {
+        let elem_size = mem::size_of::<T>();
+        let ptr = unsafe { Unique::new(malloc(elem_size) as *mut T) };
+        unsafe{ ptr::write(ptr.as_ptr().offset(0), item) };
+        Box {ptr: ptr}
+    }
 }
