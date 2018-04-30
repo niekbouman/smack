@@ -104,25 +104,32 @@ fn sized_realloc(orig_ptr: *mut u8, orig_size: usize, new_size: usize) -> *mut u
   }
 }
 
-use std::ptr::{self};
+use std::ptr::{self,null};
 use std::mem;
 use std::ops::{Deref, DerefMut};
 
 #[cfg(verifier = "smack")]
-#[derive(Default)]
-pub struct PhantomData<T: Default> {
-  _place_older: T,
+pub struct PhantomData<T> {
+  _place_holder: *const T,
   _padding: u64
 }
 
-#[cfg(verifier = "smack")]
-struct Unique<T: Default> {
-  _marker: PhantomData<T>,    // For the drop checker
-  ptr: *const T,              // *const for variance
+impl<T> Default for PhantomData<T> {
+    fn default() -> Self {
+        PhantomData::<T> { _place_holder: ptr::null(),
+                            _padding: 0}
+    }
 }
 
 #[cfg(verifier = "smack")]
-impl<T: Default> Unique<T> {
+struct Unique<T: Sized> {
+//  _marker: PhantomData<T>,    // For the drop checker
+    ptr: *const T,              // *const for variance
+    _marker: u64,
+}
+
+#[cfg(verifier = "smack")]
+impl<T: Sized> Unique<T> {
   pub fn new(ptr: *mut T) -> Self {
     Unique { ptr: ptr, _marker: Default::default() }
   }
@@ -133,13 +140,13 @@ impl<T: Default> Unique<T> {
 }
 
 #[cfg(verifier = "smack")]
-struct RawVec<T: Default> {
+struct RawVec<T: Sized> {
   ptr: Unique<T>,
   cap: usize,
 }
 
 #[cfg(verifier = "smack")]
-impl<T: Default> RawVec<T> {
+impl<T: Sized> RawVec<T> {
   fn new() -> Self {
     let elem_size = mem::size_of::<T>();
     let cap = 32;
@@ -167,20 +174,20 @@ impl<T: Default> RawVec<T> {
 }
 
 #[cfg(verifier = "smack")]
-impl<T: Default> Drop for RawVec<T> {
+impl<T: Sized> Drop for RawVec<T> {
   fn drop(&mut self) {
     unsafe { free(self.ptr.ptr as *mut _) };
   }
 }
 
 #[cfg(verifier = "smack")]
-pub struct Vec<T: Default> {
+pub struct Vec<T: Sized> {
   buf: RawVec<T>,
   len: usize,
 }
 
 #[cfg(verifier = "smack")]
-impl<T: Default> Vec<T> {
+impl<T: Sized> Vec<T> {
   fn ptr(&self) -> *mut T { self.buf.ptr.as_ptr() }
 
   fn cap(&self) -> usize { self.buf.cap }
@@ -283,7 +290,7 @@ impl <T: Default> Default for Vec<T> {
 }
 
 #[cfg(verifier = "smack")]
-impl<T: Default> Drop for Vec<T> {
+impl<T: Sized> Drop for Vec<T> {
   fn drop(&mut self) {
     while let Some(_) = self.pop() {}
     // allocation is handled by RawVec
@@ -291,7 +298,7 @@ impl<T: Default> Drop for Vec<T> {
 }
 
 #[cfg(verifier = "smack")]
-impl<T: Default> Deref for Vec<T> {
+impl<T: Sized> Deref for Vec<T> {
   type Target = [T];
   fn deref(&self) -> &[T] {
     unsafe {
@@ -301,7 +308,7 @@ impl<T: Default> Deref for Vec<T> {
 }
 
 #[cfg(verifier = "smack")]
-impl<T: Default> DerefMut for Vec<T> {
+impl<T: Sized> DerefMut for Vec<T> {
   fn deref_mut(&mut self) -> &mut [T] {
     unsafe {
       ::std::slice::from_raw_parts_mut(self.buf.ptr.ptr as *mut T, self.len)
@@ -377,25 +384,25 @@ impl<T> DoubleEndedIterator for RawValIter<T> {
 }
 
 #[cfg(verifier = "smack")]
-pub struct IntoIter<T: Default> {
+pub struct IntoIter<T: Sized> {
   _buf: RawVec<T>, // we don't actually care about this. Just need it to live.
   iter: RawValIter<T>,
 }
 
 #[cfg(verifier = "smack")]
-impl<T: Default> Iterator for IntoIter<T> {
+impl<T: Sized> Iterator for IntoIter<T> {
   type Item = T;
   fn next(&mut self) -> Option<T> { self.iter.next() }
   fn size_hint(&self) -> (usize, Option<usize>) { self.iter.size_hint() }
 }
 
 #[cfg(verifier = "smack")]
-impl<T: Default> DoubleEndedIterator for IntoIter<T> {
+impl<T: Sized> DoubleEndedIterator for IntoIter<T> {
   fn next_back(&mut self) -> Option<T> { self.iter.next_back() }
 }
 
 #[cfg(verifier = "smack")]
-impl<T: Default> Drop for IntoIter<T> {
+impl<T: Sized> Drop for IntoIter<T> {
   fn drop(&mut self) {
     for _ in &mut *self {}
   }
@@ -425,62 +432,76 @@ macro_rules! vec {
   };  
 }
 
-#[cfg(verifier = "smack")]
-pub struct String {
-    backing_store: Vec<u8>,
-}
+// #[cfg(verifier = "smack")]
+// pub struct String {
+//     backing_store: Vec<u8>,
+// }
+
+// #[cfg(verifier = "smack")]
+// impl String {
+//   pub fn from(s: &str) -> String {
+//     let mut bs = vec![];
+//     // let bytes = s.as_bytes();  
+//     // for i in 0..bytes.len() {
+//     //   bs.push(bytes[i]);
+//     // }
+//     String{backing_store: bs}
+//   }
+//   pub fn from_i64(i: i64) -> String {
+//       String::from("")
+//   }
+// }
+
+// #[cfg(verifier = "smack")]
+// impl Default for String {
+//   fn default() -> String {
+//     String{backing_store: vec![]}
+//   }
+// }
+
+// #[cfg(verifier = "smack")]
+// impl Clone for String {
+//     fn clone(&self) -> Self {
+//         let mut new_bs = vec![];
+//         for x in self.backing_store.iter() {
+//             new_bs.push(*x);
+//         }
+//         String {backing_store: new_bs}
+//   }
+// }
+
+// #[cfg(verifier = "smack")]
+// impl String {
+//     pub fn get(&self, idx: usize) -> char {
+//         self.backing_store[idx] as char
+//     }
+// }
 
 #[cfg(verifier = "smack")]
-impl String {
-  pub fn from(s: &str) -> String {
-    let mut bs = vec![];
-    // let bytes = s.as_bytes();  
-    // for i in 0..bytes.len() {
-    //   bs.push(bytes[i]);
-    // }
-    String{backing_store: bs}
-  }
-  pub fn from_i64(i: i64) -> String {
-      String::from("")
-  }
-}
-
-#[cfg(verifier = "smack")]
-impl Default for String {
-  fn default() -> String {
-    String{backing_store: vec![]}
-  }
-}
-
-#[cfg(verifier = "smack")]
-impl Clone for String {
-    fn clone(&self) -> Self {
-        let mut new_bs = vec![];
-        for x in self.backing_store.iter() {
-            new_bs.push(*x);
-        }
-        String {backing_store: new_bs}
-  }
-}
-
-#[cfg(verifier = "smack")]
-impl String {
-    pub fn get(&self, idx: usize) -> char {
-        self.backing_store[idx] as char
-    }
-}
-
-#[cfg(verifier = "smack")]
-struct Box<T: Default> {
+pub struct Box<T: Sized> {
     ptr: Unique<T>
 }
 
 #[cfg(verifier = "smack")]
-impl<T: Default> Box<T> {
-    fn new(item: T) -> Box<T> {
+impl<T: Sized> Box<T> {
+    pub fn new(item: T) -> Box<T> {
         let elem_size = mem::size_of::<T>();
         let ptr = unsafe { Unique::new(malloc(elem_size) as *mut T) };
         unsafe{ ptr::write(ptr.as_ptr().offset(0), item) };
         Box {ptr: ptr}
     }
 }
+
+impl<T: Sized> Deref for Box<T> {
+    type Target = T;
+    fn deref(&self) -> &Self::Target {
+        unsafe{ mem::transmute::<*mut T, &T>(self.ptr.as_ptr()) }
+    }
+}
+
+/*#[cfg(verifier = "smack")]
+impl<T: Sized> Default for Box<T> {
+  fn default() -> Box<T> {
+      Box<T>::new{ ptr: Default::default() };
+  }
+}*/
