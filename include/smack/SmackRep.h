@@ -65,9 +65,6 @@ private:
   const Expr* pointerToInteger(const Expr* e, unsigned width);
   const Expr* integerToPointer(const Expr* e, unsigned width);
 
-  std::string opName(const std::string& operation, std::list<const llvm::Type*> types);
-  std::string opName(const std::string& operation, std::initializer_list<unsigned> types);
-
   const Stmt* store(unsigned R, const llvm::Type* T, const Expr* P, const Expr* V);
 
   const Expr* cast(unsigned opcode, const llvm::Value* v, const llvm::Type* t);
@@ -94,6 +91,9 @@ private:
     unsigned length = std::numeric_limits<unsigned>::max());
 
 public:
+  std::string opName(const std::string& operation, std::list<const llvm::Type*> types);
+  std::string opName(const std::string& operation, std::initializer_list<unsigned> types);
+
   const Expr* pointerLit(unsigned v) { return pointerLit((unsigned long) v); }
   const Expr* pointerLit(unsigned long v);
   const Expr* pointerLit(long v);

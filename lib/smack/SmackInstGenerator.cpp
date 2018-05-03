@@ -379,10 +379,14 @@ void SmackInstGenerator::visitShuffleVectorInst(ShuffleVectorInst &I) {
 
 void SmackInstGenerator::visitExtractValueInst(llvm::ExtractValueInst& evi) {
   processInstruction(evi);
-  if (!SmackOptions::BitPrecise) {
-    const Expr* e = rep->expr(evi.getAggregateOperand());
-    for (unsigned i = 0; i < evi.getNumIndices(); i++)
-      e = Expr::fn(Naming::EXTRACT_VALUE, e, Expr::lit((unsigned long) evi.getIndices()[i]));
+  if (true || !SmackOptions::BitPrecise) {
+    const Value* g = evi.getAggregateOperand();
+    const Expr* e = rep->expr(g);
+    const unsigned num_indices = evi.getNumIndices();
+    for (unsigned i = 0; i < num_indices - 1; i++) {
+      e = Expr::fn(rep->opName(Naming::EXTRACT_VALUE, {g->getType(), g->getType()}), e, Expr::lit((unsigned long) evi.getIndices()[i]));
+    }
+    e = Expr::fn(rep->opName(Naming::EXTRACT_VALUE, {g->getType(), evi.getType()}), e, Expr::lit((unsigned long) evi.getIndices()[num_indices-1]));
     emit(Stmt::assign(rep->expr(&evi),e));
   } else {
     WARN("Ignoring extract instruction under bit vector mode.");
@@ -391,34 +395,45 @@ void SmackInstGenerator::visitExtractValueInst(llvm::ExtractValueInst& evi) {
 
 void SmackInstGenerator::visitInsertValueInst(llvm::InsertValueInst& ivi) {
   processInstruction(ivi);
-  const Expr* old = rep->expr(ivi.getAggregateOperand());
+  const Value* g = ivi.getAggregateOperand();
+  const Expr* old = rep->expr(g);
   const Expr* res = rep->expr(&ivi);
   const llvm::Type* t = ivi.getType();
 
   for (unsigned i = 0; i < ivi.getNumIndices(); i++) {
     unsigned idx = ivi.getIndices()[i];
 
-    unsigned num_elements;
-    if (const llvm::StructType* st = llvm::dyn_cast<const llvm::StructType>(t)) {
-      num_elements = st->getNumElements();
-      t = st->getElementType(idx);
-    } else if (const llvm::ArrayType* at = llvm::dyn_cast<const llvm::ArrayType>(t)) {
-      num_elements = at->getNumElements();
-      t = at->getElementType();
-    } else {
-      llvm_unreachable("Unexpected aggregate type.");
-    }
+    auto getType = [] (const Type* t, unsigned idx) -> Type* {
+      if (const llvm::StructType* st = llvm::dyn_cast<const llvm::StructType>(t)) {
+	return st->getElementType(idx);
+      } else if (const llvm::ArrayType* at = llvm::dyn_cast<const llvm::ArrayType>(t)) {
+	return at->getElementType();
+      } else {
+	llvm_unreachable("Unexpected aggregate type.");
+      }
+    };
 
-    for (unsigned j = 0; j < num_elements; j++) {
+    auto getNumElements = [] (const Type* t) -> unsigned {
+      if (const llvm::StructType* st = llvm::dyn_cast<const llvm::StructType>(t)) {
+	return st->getNumElements();
+      } else if (const llvm::ArrayType* at = llvm::dyn_cast<const llvm::ArrayType>(t)) {
+	return at->getNumElements();
+      } else {
+	llvm_unreachable("Unexpected aggregate type.");
+      }
+    };
+
+    for (unsigned j = 0; j < getNumElements(t); j++) {
       if (j != idx) {
         emit(Stmt::assume(Expr::eq(
-          Expr::fn(Naming::EXTRACT_VALUE, res, Expr::lit(j)),
-          Expr::fn(Naming::EXTRACT_VALUE, old, Expr::lit(j))
+          Expr::fn(rep->opName(Naming::EXTRACT_VALUE, {t, getType(t, j)}), res, Expr::lit(j)),
+          Expr::fn(rep->opName(Naming::EXTRACT_VALUE, {t, getType(t, j)}), old, Expr::lit(j))
         )));
       }
     }
-    res = Expr::fn(Naming::EXTRACT_VALUE, res, Expr::lit(idx));
-    old = Expr::fn(Naming::EXTRACT_VALUE, old, Expr::lit(idx));
+    res = Expr::fn(rep->opName(Naming::EXTRACT_VALUE, {t, getType(t, idx)}), res, Expr::lit(idx));
+    old = Expr::fn(rep->opName(Naming::EXTRACT_VALUE, {t, getType(t, idx)}), old, Expr::lit(idx));
+    t = getType(t, idx);
   }
   emit(Stmt::assume(Expr::eq(res,rep->expr(ivi.getInsertedValueOperand()))));
 }
@@ -454,8 +469,8 @@ void SmackInstGenerator::visitLoadInst(llvm::LoadInst& li) {
     IntegerType* atomTy = IntegerType::get(origTy->getContext(), origTy->getBitWidth() >> 1);
     auto L1 = rep->load(P, atomTy, rep->expr(P));
     auto L2 = rep->load(P, atomTy, rep->pa(rep->expr(P), atomTy->getBitWidth() >> 3));
-    emit(Stmt::assume(Expr::eq(Expr::fn(Naming::EXTRACT_VALUE, rep->expr(&li), Expr::lit(0U)), L1)));
-    emit(Stmt::assume(Expr::eq(Expr::fn(Naming::EXTRACT_VALUE, rep->expr(&li), Expr::lit(1U)), L2)));
+    emit(Stmt::assume(Expr::eq(Expr::fn(rep->opName(Naming::EXTRACT_VALUE, {origTy, atomTy}), rep->expr(&li), Expr::lit(0U)), L1)));
+    emit(Stmt::assume(Expr::eq(Expr::fn(rep->opName(Naming::EXTRACT_VALUE, {origTy, atomTy}), rep->expr(&li), Expr::lit(1U)), L2)));
   } else
     emit(Stmt::assign(rep->expr(&li), E));
 
@@ -485,8 +500,8 @@ void SmackInstGenerator::visitStoreInst(llvm::StoreInst& si) {
       IntegerType* atomTy = IntegerType::get(origTy->getContext(), origTy->getBitWidth() >> 1);
       auto P1 = rep->expr(P);
       auto P2 = rep->pa(rep->expr(P), atomTy->getBitWidth() >> 3);
-      emit(rep->store(P, Expr::fn(Naming::EXTRACT_VALUE, rep->expr(V), Expr::lit(0U)), atomTy, P1));
-      emit(rep->store(P, Expr::fn(Naming::EXTRACT_VALUE, rep->expr(V), Expr::lit(1U)), atomTy, P2));
+      emit(rep->store(P, Expr::fn(rep->opName(Naming::EXTRACT_VALUE, {origTy, atomTy}), rep->expr(V), Expr::lit(0U)), atomTy, P1));
+      emit(rep->store(P, Expr::fn(rep->opName(Naming::EXTRACT_VALUE, {origTy, atomTy}), rep->expr(V), Expr::lit(1U)), atomTy, P2));
     } else
       emit(rep->store(P,V));
   }
