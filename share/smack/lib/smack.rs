@@ -492,6 +492,7 @@ impl<T: Sized> Box<T> {
     }
 }
 
+#[cfg(verifier = "smack")]
 impl<T: Sized> Deref for Box<T> {
     type Target = T;
     fn deref(&self) -> &Self::Target {
