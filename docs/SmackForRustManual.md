@@ -47,24 +47,30 @@ Note: Run `smack program.rs` first in order for SMACK to create the `smack` crat
 
 This will bring in definitions for our modeled `Vec` and `Box` classes, as well as macros for `assert` and `assume`.
 Additionally, all primitive integer types and bool have the _NonDet_ trait implemented. This means one can write
-```let x = 5u8.nondet();```
+```
+let x = 5u8.nondet();
+```
 When compiled by the Rust compiler directly, `x` will have the value `5`, however when run in SMACK, `x` will be nondeterministic,
 and in this exapmle it can take any value between 0 and 255 inclusive as this is an unsigned, 8-bit integer.
 
 We can add contraints to `x` by writing
-```assume!(x < 30);```
+```
+assume!(x < 30);
+```
 
 In SMACK this means that `x` is now in 0 to 29 inclusive, and translates into a noop outside of SMACK.
 
 Putting this together, we can run SMACK on the following, small program `example1.rs`:
-```fn main() {
+```
+fn main() {
   let x = 5u8.nondet();
   assume!(x < 30);
   assert!(x*x < 29*29);
 }
 ```
 We run check the example in SMACK by running
-```$ smack example1.rs
 ```
-SMACK will report an error on this program and its backtrace will show that the assertion can fail if `x == 29`. We can fix the example by changing the assertion to `assert!(x*x <= 29*29` which SMACK will report as verified.
+$ smack example1.rs
+```
+SMACK will report an error on this program and its backtrace will show that the assertion can fail if `x == 29`. We can fix the example by changing the assertion to `assert!(x*x <= 29*29);`, which SMACK will report as "verified".
 
