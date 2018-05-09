@@ -93,9 +93,14 @@ make_nondet!(u32, __VERIFIER_nondet_unsigned_int);
 make_nondet!(i64, __VERIFIER_nondet_signed_long_long);
 make_nondet!(u64, __VERIFIER_nondet_unsigned_long_long);
 
+
+#[cfg(not(verifier = "smack"))]
+#[allow(dead_code)]
+use std::Vec;
 /* Vector class.
    Based on https://doc.rust-lang.org/nomicon/vec-final.html */
 #[cfg(verifier = "smack")]
+#[allow(dead_code)]
 fn sized_realloc(orig_ptr: *mut u8, orig_size: usize, new_size: usize) -> *mut u8 {
   unsafe {
     let result: *mut u8 = malloc(new_size);
@@ -104,16 +109,21 @@ fn sized_realloc(orig_ptr: *mut u8, orig_size: usize, new_size: usize) -> *mut u
   }
 }
 
+#[cfg(verifier = "smack")]
 use std::ptr::{self,null};
+#[cfg(verifier = "smack")]
 use std::mem;
+#[cfg(verifier = "smack")]
 use std::ops::{Deref, DerefMut};
 
 #[cfg(verifier = "smack")]
+#[allow(dead_code)]
 pub struct PhantomData<T> {
   _place_holder: *const T,
   _padding: u64
 }
 
+#[cfg(verifier = "smack")]
 impl<T> Default for PhantomData<T> {
     fn default() -> Self {
         PhantomData::<T> { _place_holder: ptr::null(),
@@ -122,6 +132,7 @@ impl<T> Default for PhantomData<T> {
 }
 
 #[cfg(verifier = "smack")]
+#[allow(dead_code)]
 struct Unique<T: Sized> {
 //  _marker: PhantomData<T>,    // For the drop checker
     ptr: *const T,              // *const for variance
@@ -140,12 +151,14 @@ impl<T: Sized> Unique<T> {
 }
 
 #[cfg(verifier = "smack")]
+#[allow(dead_code)]
 struct RawVec<T: Sized> {
   ptr: Unique<T>,
   cap: usize,
 }
 
 #[cfg(verifier = "smack")]
+#[allow(dead_code)]
 impl<T: Sized> RawVec<T> {
   fn new() -> Self {
     let elem_size = mem::size_of::<T>();
@@ -190,17 +203,20 @@ pub struct Vec<T: Sized> {
 impl<T: Sized> Vec<T> {
   fn ptr(&self) -> *mut T { self.buf.ptr.as_ptr() }
 
+  #[allow(dead_code)]
   fn cap(&self) -> usize { self.buf.cap }
 
   pub fn new() -> Self {
     Vec { buf: RawVec::new(), len: 0 }
   }
 
+  #[allow(dead_code)]
   pub fn with_capacity(cap: usize) -> Self {
     Vec { buf: RawVec::new_with_capacity(cap), len: 0 }
   }
   
 
+  #[allow(dead_code)]
   pub fn push(&mut self, elem: T) {
     if self.len == self.cap() { self.buf.grow(); }
 
@@ -211,6 +227,7 @@ impl<T: Sized> Vec<T> {
     self.len += 1;
   }
 
+  #[allow(dead_code)]
   pub fn pop(&mut self) -> Option<T> {
     if self.len == 0 {
       None
@@ -222,6 +239,7 @@ impl<T: Sized> Vec<T> {
     }
   }
 
+  #[allow(dead_code)]
   pub fn append(&mut self, other: &mut Vec<T>) {
     let mut i: usize = 0;
     let olen = other.len();
@@ -238,6 +256,7 @@ impl<T: Sized> Vec<T> {
     }
   }
   
+  #[allow(dead_code)]
   pub fn insert(&mut self, index: usize, elem: T) {
     assert!(index <= self.len);
     if self.cap() == self.len { self.buf.grow(); }
@@ -253,6 +272,7 @@ impl<T: Sized> Vec<T> {
     }
   }
 
+  #[allow(dead_code)]
   pub fn remove(&mut self, index: usize) -> T {
     assert!(index < self.len);
     unsafe {
@@ -265,6 +285,7 @@ impl<T: Sized> Vec<T> {
     }
   }
 
+  #[allow(dead_code)]
   pub fn into_iter(self) -> IntoIter<T> {
     unsafe {
       let iter = RawValIter::new(&self);
@@ -277,6 +298,7 @@ impl<T: Sized> Vec<T> {
       }
     }
   }
+  #[allow(dead_code)]
   pub fn len(&self) -> usize {
     self.len
   }
@@ -478,13 +500,14 @@ macro_rules! vec {
 // }
 
 #[cfg(verifier = "smack")]
+#[allow(dead_code)]
 pub struct Box<T: Sized> {
-    ptr: Unique<T>
+  ptr: Unique<T>
 }
 
 #[cfg(verifier = "smack")]
-impl<T: Sized> Box<T> {
-    pub fn new(item: T) -> Box<T> {
+#[allow(dead_code)]
+impl<T: Sized> Box<T> {   pub fn new(item: T) -> Box<T> {
         let elem_size = mem::size_of::<T>();
         let ptr = unsafe { Unique::new(malloc(elem_size) as *mut T) };
         unsafe{ ptr::write(ptr.as_ptr().offset(0), item) };
@@ -493,6 +516,7 @@ impl<T: Sized> Box<T> {
 }
 
 #[cfg(verifier = "smack")]
+#[allow(dead_code)]
 impl<T: Sized> Deref for Box<T> {
     type Target = T;
     fn deref(&self) -> &Self::Target {
