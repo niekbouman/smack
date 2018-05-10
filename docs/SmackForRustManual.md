@@ -41,31 +41,31 @@ after logging out of the virtual machine.
 
 ## An overview of SMACK extensions
 In order to use the full functionality of our extensions, Rust programs should start with:
-```
+```rust
 #[macro_use]
 mod smack;
 use smack::*;
 ```
 
-Note: Run `smack program.rs` first in order for SMACK to create the `smack` crate.
+**Note: Run `smack program.rs` first in order for SMACK to create the `smack` crate.**
 
 This will bring in definitions for our modeled `Vec` and `Box` classes, as well as macros for `assert` and `assume`.
 Additionally, all primitive integer types and bool have the _NonDet_ trait implemented. This means one can write
-```
+```rust
 let x = 5u8.nondet();
 ```
 When compiled by the Rust compiler directly, `x` will have the value `5`, however when run in SMACK, `x` will be nondeterministic,
 and in this example it can take any value between 0 and 255 inclusive as this is an unsigned, 8-bit integer.
 
 We can add contraints to `x` by writing
-```
+```rust
 assume!(x < 30);
 ```
 
 In SMACK this means that `x` is now in 0 to 29 inclusive, and translates into a noop outside of SMACK.
 
 Putting this together, we can run SMACK on the following, small program `example1.rs`:
-```
+```rust
 // example1.rs
 #[macro_use]
 mod smack;
@@ -83,7 +83,7 @@ $ smack example1.rs
 SMACK will report an error on this program and its backtrace will show that the assertion can fail if `x == 29`. We can fix the example by changing the assertion to `assert!(x*x <= 29*29);`, which SMACK will report as "verified".
 
 We can also check a program for integer overflow in `example2.rs`:
-```
+```rust
 // example2.rs
 #[macro_use]
 mod smack;
@@ -107,7 +107,7 @@ $ smack --integer-overflow example2.rs
 SMACK will report that an integer overflow can happen in the program, and gives an example value for `x` for when this is possible.
 
 We can produce a variation of this program, `example2a.rs`:
-```
+```rust
 // example2a.rs
 #[macro_use]
 mod smack;
@@ -125,41 +125,44 @@ $ smack --integer-overflow example2a.rs
 there is no report of an integer overflow as `x` is now less than 64.
 ### Dynamic memory
 We can create dynamically sized arrays using the `Vec` class and heap allocated memory using the `Box` class. For example
-```
+```rust
 let x = Box::new(6);
 ```
 will create a pointer to a heap allocated number, and
-```
+```rust
 let x = vec![1,2,3,4,5,6];
 ```
 will create a heap allocated dynamic array with initial contents 1,2,...,6. Dereferencing of a Box as in
-```
+```rust
 let mut x = Box::new(7):
 *x = 8;
 assert!(*x == 8);
 ```
 is supported. We support indexing, growing and and iterating over a `Vec` as in:
-```
+```rust
 // vec_example1.rs
 #[macro_use]
 mod smack;
 use smack::*;
-let mut x = vec![1,1,2,3];
-x.push(4);
-x.push(5);
-x.push(6);
-x[0] = 0;
-for &v in x {
-  assert!(*v < 7);
-}
 
-for i in 0..x.len() {
-  assert!(x[i] == i);
+fn main() {
+  let mut x = vec![1,1,2,3];
+  x.push(4);
+  x.push(5);
+  x.push(6);
+  x[0] = 0;
+  for &v in x {
+    assert!(*v < 7);
+  }
+
+  for i in 0..x.len() {
+    assert!(x[i] == i);
+  }
 }
 ```
 
 # A more complex example
-```
+```rust
 // example3.rs
 #[macro_use]
 mod smack;
@@ -199,6 +202,16 @@ We can also check for integer overflow by running
 $ smack --no-memory-splitting --unroll=5 --integer-overflow example3.rs
 ```
 This should return no errors as well, but we can seed the program with an error by changing the bounds on `a, b, c` or `d` in the assume statement.
+
+# More examples
+Our feature-test benchmark suite can be found at https://github.com/smackers/smack/tree/rust-prelims/examples/rust. It is also
+present in the virtual machine in `examples/rust`. The suite can be easily run by changing into this directory and running
+```
+./regtest.py
+```
+Note that the entire benchmark run will take about an hour, depending on hardware.
+
+Each benchmark category is represented by a directory within `examples/rust`. Each file is annotated with the SMACK flags needed for verification, as well as the expected result of verification.
 
 # General information on SMACK options
 + `--bit-precise`: This flag should be used if the program contains any bit-wise operations. Note that this option can slow verification of the program significantly.
