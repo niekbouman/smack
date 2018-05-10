@@ -39,6 +39,14 @@ $ vagrant halt
 ```
 after logging out of the virtual machine.
 
+# Our benchmark suite
+Our feature-test benchmark suite can be found at https://github.com/smackers/smack/tree/rust-prelims/examples/rust. It is also
+present in the virtual machine in `examples/rust`. The suite can be easily run by changing into this directory and running
+```
+./regtest.py
+```
+Note that the entire benchmark run will take about an hour, depending on hardware.
+
 ## An overview of SMACK extensions
 In order to use the full functionality of our extensions, Rust programs should start with:
 ```rust
@@ -202,14 +210,6 @@ We can also check for integer overflow by running
 $ smack --no-memory-splitting --unroll=5 --integer-overflow example3.rs
 ```
 This should return no errors as well, but we can seed the program with an error by changing the bounds on `a, b, c` or `d` in the assume statement.
-
-# More examples
-Our feature-test benchmark suite can be found at https://github.com/smackers/smack/tree/rust-prelims/examples/rust. It is also
-present in the virtual machine in `examples/rust`. The suite can be easily run by changing into this directory and running
-```
-./regtest.py
-```
-Note that the entire benchmark run will take about an hour, depending on hardware.
 
 Each benchmark category is represented by a directory within `examples/rust`. Each file is annotated with the SMACK flags needed for verification, as well as the expected result of verification.
 
