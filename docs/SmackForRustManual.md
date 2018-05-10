@@ -47,6 +47,7 @@ present in the virtual machine in `examples/rust`. The suite can be easily run b
 ```
 Note that the entire benchmark run will take about an hour, depending on hardware.
 
+# Writing your own test programs
 ## An overview of SMACK extensions
 In order to use the full functionality of our extensions, Rust programs should start with:
 ```rust
