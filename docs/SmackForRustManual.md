@@ -12,6 +12,9 @@ This will allow you to use our included Vagrant file to automate the building an
 If git is not currently installed, follow the instructions at https://git-scm.com/book/en/v2/Getting-Started-Installing-Git.
 
 ## Download and install the tool
+
+If you are using a Windows machine, you are recommended to run command prompt or powershell as administrator. Otherwise you may get regression test failures.
+
 Select a working directory and run
 ```
 $ git clone https://github.com/smackers/smack.git
