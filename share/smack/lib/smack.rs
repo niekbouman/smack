@@ -92,6 +92,8 @@ make_nondet!(i32, __VERIFIER_nondet_signed_int);
 make_nondet!(u32, __VERIFIER_nondet_unsigned_int);
 make_nondet!(i64, __VERIFIER_nondet_signed_long_long);
 make_nondet!(u64, __VERIFIER_nondet_unsigned_long_long);
+make_nondet!(isize, __VERIFIER_nondet_signed_long_long);
+make_nondet!(usize, __VERIFIER_nondet_unsigned_long_long);
 
 
 #[cfg(not(verifier = "smack"))]
@@ -175,14 +177,12 @@ impl<T: Sized> RawVec<T> {
   }
 
     fn grow(&mut self) {
-    unsafe {
       let elem_size = mem::size_of::<T>();
       let new_cap = 2 * self.cap;
       let ptr = sized_realloc(self.ptr.as_ptr() as *mut _, self.cap*elem_size, new_cap*elem_size);
 
       self.ptr = Unique::new(ptr as *mut _);
       self.cap = new_cap;
-    }
   }
 }
 
