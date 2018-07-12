@@ -332,7 +332,7 @@ void SmackInstGenerator::visitBinaryOperator(llvm::BinaryOperator& I) {
   if (isa<VectorType>(I.getType())) {
     auto X = I.getOperand(0);
     auto Y = I.getOperand(1);
-    auto D = VectorOperations(rep).simd(&I);
+    auto D = VectorOperations(rep).binary(&I);
     E = Expr::fn(D->getName(), {rep->expr(X), rep->expr(Y)});
   } else {
     E = rep->bop(&I);
@@ -562,7 +562,7 @@ void SmackInstGenerator::visitCastInst(llvm::CastInst& I) {
   const Expr *E;
   if (isa<VectorType>(I.getType())) {
     auto X = I.getOperand(0);
-    auto D = VectorOperations(rep).simd(&I);
+    auto D = VectorOperations(rep).cast(&I);
     E = Expr::fn(D->getName(), rep->expr(X));
   } else {
     E = rep->cast(&I);
@@ -580,7 +580,7 @@ void SmackInstGenerator::visitCmpInst(llvm::CmpInst& I) {
   if (isa<VectorType>(I.getType())) {
     auto X = I.getOperand(0);
     auto Y = I.getOperand(1);
-    auto D = VectorOperations(rep).simd(&I);
+    auto D = VectorOperations(rep).cmp(&I);
     E = Expr::fn(D->getName(), rep->expr(X), rep->expr(Y));
   } else {
     E = rep->cmp(&I);
@@ -674,7 +674,7 @@ void SmackInstGenerator::visitCallInst(llvm::CallInst& ci) {
       rep->addBplGlobal(var);
     }
 
-  } else if (name.find(Naming::CONTRACT_EXPR) != std::string::npos) {
+  } else if (rep->isContractExpr(f)) {
     // NOTE do not generate code for contract expressions
 
   } else if (name == "__CONTRACT_int_variable") {
@@ -691,7 +691,7 @@ void SmackInstGenerator::visitCallInst(llvm::CallInst& ci) {
     // CallInst* cj = dyn_cast<CallInst>(ci.getArgOperand(1));
     // assert(cj && "Expected contract expression argument to contract function.");
     // Function* F = cj->getCalledFunction();
-    // assert(F && F->getName().find(Naming::CONTRACT_EXPR) != std::string::npos
+    // assert(F && rep->isContractExpr(F)
     //     && "Expected contract expression argument to contract function.");
     //
     // auto binding = rep->getString(ci.getArgOperand(0));
@@ -721,7 +721,7 @@ void SmackInstGenerator::visitCallInst(llvm::CallInst& ci) {
     CallInst* cj = dyn_cast<CallInst>(ci.getArgOperand(0));
     assert(cj && "Expected contract expression argument to contract function.");
     Function* F = cj->getCalledFunction();
-    assert(F && F->getName().find(Naming::CONTRACT_EXPR) != std::string::npos
+    assert(F && rep->isContractExpr(F)
         && "Expected contract expression argument to contract function.");
 
     std::list<const Expr*> args;

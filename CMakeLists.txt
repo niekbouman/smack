@@ -21,6 +21,8 @@ if (NOT WIN32 OR MSYS OR CYGWIN)
   string(REPLACE "-DNDEBUG" "" LLVM_CXXFLAGS "${LLVM_CXXFLAGS}")
   string(REPLACE "-Wno-maybe-uninitialized" "" LLVM_CXXFLAGS "${LLVM_CXXFLAGS}")
   string(REPLACE "-fuse-ld=gold" "" LLVM_CXXFLAGS "${LLVM_CXXFLAGS}")
+  string(REPLACE "--no-keep-files-mapped" "" LLVM_CXXFLAGS "${LLVM_CXXFLAGS}")
+  string(REPLACE "--no-map-whole-files" "" LLVM_CXXFLAGS "${LLVM_CXXFLAGS}")
   string(REPLACE "-Wl," "" LLVM_CXXFLAGS "${LLVM_CXXFLAGS}")
   string(REPLACE "-gsplit-dwarf" "" LLVM_CXXFLAGS "${LLVM_CXXFLAGS}")
   string(REGEX REPLACE "-O[0-9]" "" CMAKE_CXX_FLAGS "${LLVM_CXXFLAGS}")
@@ -175,6 +177,7 @@ add_library(smackTranslator STATIC
   include/smack/VectorOperations.h
   include/smack/MemorySafetyChecker.h
   include/smack/IntegerOverflowChecker.h
+  include/smack/NormalizeLoops.h
   include/smack/SplitAggregateValue.h
   include/smack/IntegerPackingToStruct.h
   lib/smack/AddTiming.cpp
@@ -197,6 +200,7 @@ add_library(smackTranslator STATIC
   lib/smack/VectorOperations.cpp
   lib/smack/MemorySafetyChecker.cpp
   lib/smack/IntegerOverflowChecker.cpp
+  lib/smack/NormalizeLoops.cpp
   lib/smack/SplitAggregateValue.cpp
   lib/smack/IntegerPackingToStruct.cpp
 )

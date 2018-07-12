@@ -90,6 +90,8 @@ private:
   Decl* memsetProc(std::string type,
     unsigned length = std::numeric_limits<unsigned>::max());
 
+  bool isUnsafeFloatAccess(const llvm::Type* elemTy, const llvm::Type* resultTy);
+
 public:
   std::string opName(const std::string& operation, std::list<const llvm::Type*> types);
   std::string opName(const std::string& operation, std::initializer_list<unsigned> types);
@@ -163,6 +165,9 @@ public:
   Decl* getInitFuncs();
   std::string getPrelude();
   const Expr* declareIsExternal(const Expr* e);
+
+  bool isContractExpr(const llvm::Value* V) const;
+  bool isContractExpr(const std::string S) const;
 
   void addAuxiliaryDeclaration(Decl* D);
   std::list<Decl*> auxiliaryDeclarations();

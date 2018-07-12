@@ -20,12 +20,20 @@ namespace smack {
     std::string field(Type *T, unsigned idx);
     std::string selector(Type *T, unsigned idx);
 
-    Decl *inverseCastAxiom(CastInst *CI);
+    FuncDecl *cast(unsigned OpCode, Type *SrcTy, Type *DstTy);
+    Decl *inverseAxiom(unsigned OpCode, Type *SrcTy, Type *DstTy);
+    FuncDecl *binary(unsigned OpCode, VectorType *T);
+    FuncDecl *cmp(CmpInst::Predicate P, VectorType *T);
 
   public:
     VectorOperations(SmackRep *rep) : rep(rep) {}
     std::list<Decl*> type(Type *T);
-    FuncDecl *simd(Instruction *I);
+    const Expr *constant(const ConstantDataVector *C);
+    const Expr *constant(const ConstantAggregateZero *C);
+
+    FuncDecl *cast(CastInst *I);
+    FuncDecl *binary(BinaryOperator *I);
+    FuncDecl *cmp(CmpInst *I);
     FuncDecl *shuffle(Type *T, Type *U, std::vector<int> mask);
     FuncDecl *insert(Type *T, Type *IT);
     FuncDecl *extract(Type *T, Type *IT);
