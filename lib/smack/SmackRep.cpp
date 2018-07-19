@@ -526,6 +526,11 @@ bool SmackRep::isUnsafeFloatAccess(const Type* elemTy, const Type* resultTy) {
 const Expr* SmackRep::load(const llvm::Value* P) {
   const PointerType* T = dyn_cast<PointerType>(P->getType());
   assert(T && "Expected pointer type.");
+  return load(P, T->getElementType(), SmackRep::expr(P));
+}
+
+const Expr* SmackRep::load(const Value* P, Type* ET, const Expr* ptrExpr) {
+  const PointerType* T = dyn_cast<PointerType>(P->getType());
   const unsigned R = regions->idx(P);
   bool bytewise = regions->get(R).bytewiseAccess();
   bool singleton = regions->get(R).isSingleton();
@@ -545,6 +550,10 @@ const Stmt* SmackRep::store(const Value* P, const Expr* V) {
   const PointerType* T = dyn_cast<PointerType>(P->getType());
   assert(T && "Expected pointer type.");
   return store(regions->idx(P), T->getElementType(), expr(P), V);
+}
+
+const Stmt* SmackRep::store(const Value* P, const Expr* V, Type* ET, const Expr* ptrExpr) {
+  return store(regions->idx(P), ET, ptrExpr, V);
 }
 
 const Stmt* SmackRep::store(unsigned R, const Type* T,
