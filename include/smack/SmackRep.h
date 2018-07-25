@@ -94,6 +94,8 @@ private:
   Decl* memsetProc(std::string type,
     unsigned length = std::numeric_limits<unsigned>::max());
 
+  bool isUnsafeFloatAccess(const llvm::Type* elemTy, const llvm::Type* resultTy);
+
 public:
   const Expr* pointerLit(unsigned v) { return pointerLit((unsigned long) v); }
   const Expr* pointerLit(unsigned long v);
@@ -161,6 +163,9 @@ public:
   Decl* getInitFuncs();
   std::string getPrelude();
   const Expr* declareIsExternal(const Expr* e);
+
+  bool isContractExpr(const llvm::Value* V) const;
+  bool isContractExpr(const std::string S) const;
 
   void addAuxiliaryDeclaration(Decl* D);
   std::list<Decl*> auxiliaryDeclarations();

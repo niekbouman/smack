@@ -13,6 +13,7 @@ namespace smack {
 
 const std::string Naming::BOOL_TYPE = "bool";
 const std::string Naming::UNINTERPRETED_FLOAT_TYPE = "float";
+const std::string Naming::HALF_TYPE = "bvhalf";
 const std::string Naming::FLOAT_TYPE = "bvfloat";
 const std::string Naming::DOUBLE_TYPE = "bvdouble";
 const std::string Naming::LONG_DOUBLE_TYPE = "bvlongdouble";
@@ -64,6 +65,7 @@ const std::string Naming::BLOCK_LBL = "$bb";
 const std::string Naming::RET_VAR = "$r";
 const std::string Naming::EXN_VAR = "$exn";
 const std::string Naming::EXN_VAL_VAR = "$exnv";
+const std::string Naming::RMODE_VAR = "$rmode";
 const std::string Naming::BOOL_VAR = "$b";
 const std::string Naming::FLOAT_VAR = "$f";
 const std::string Naming::INT_VAR = "$i";
@@ -176,18 +178,24 @@ bool Naming::isSmackGeneratedName(std::string n) {
 }
 
 std::string Naming::escape(std::string s) {
-  std::string Str(llvm::DOT::EscapeString(s));
+  std::string Str(s);
   for (unsigned i = 0; i != Str.length(); ++i)
     switch (Str[i]) {
-    case '\01':
-      Str[i] = '_';
-      break;
     case '@':
       Str[i] = '.';
       break;
-    case ':':
+    case '\01': case '\\':
+    case ':': case ' ':
+    case '(': case ')':
+    case '[': case ']':
+    case '{': case '}':
+    case '<': case '>':
+    case '|': case '"':
+    case '-':
       Str[i] = '_';
       break;
+    // Another character to escape would be '$', but SMACK internally
+    // generates LLVM IR that uses this character.
     }
   return Str;
 }
