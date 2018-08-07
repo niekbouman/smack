@@ -378,7 +378,11 @@ const Stmt* SmackRep::valueAnnotation(const CallInst& CI) {
 
   if (CI.getNumArgOperands() == 1) {
     name = indexedName(Naming::VALUE_PROC, {type(V->getType())});
-    if (dyn_cast<const Argument>(V)) {
+
+    if (dyn_cast<const User>(V)) {
+      attrs.push_back(Attr::attr("name", {Expr::id(naming->get(*V))}));
+
+    } else if (dyn_cast<const Argument>(V)) {
       attrs.push_back(Attr::attr("name", {Expr::id(naming->get(*V))}));
 
     } else if (auto LI = dyn_cast<const LoadInst>(V)) {
