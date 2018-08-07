@@ -11,6 +11,13 @@
 
 #ifdef __cplusplus
 extern "C" {
+template<typename T>
+smack_value_t __SMACK_value(T);
+#else
+smack_value_t __SMACK_value();
+// in C, this declares a function that takes an unspecified number of arguments
+// (but in C++ this would declare a function that takes no arguments, which is
+//  not what we want)
 #endif
 
 #ifdef SVCOMP
@@ -31,7 +38,6 @@ void __SMACK_decl(const char *fmt, ...);
 void __SMACK_top_decl(const char *fmt, ...);
 
 typedef struct smack_value { void* dummy; }* smack_value_t;
-smack_value_t __SMACK_value();
 smack_value_t __SMACK_values(void* ary, unsigned count);
 smack_value_t __SMACK_return_value(void);
 
