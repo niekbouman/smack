@@ -9,10 +9,11 @@
  * The SMACK "prelude" declarations
  */
 
+typedef struct smack_value { void* dummy; }* smack_value_t;
 #ifdef __cplusplus
-extern "C" {
 template<typename T>
 smack_value_t __SMACK_value(T);
+extern "C" {
 #else
 smack_value_t __SMACK_value();
 // in C, this declares a function that takes an unspecified number of arguments
@@ -37,7 +38,6 @@ void __SMACK_mod(const char *fmt, ...);
 void __SMACK_decl(const char *fmt, ...);
 void __SMACK_top_decl(const char *fmt, ...);
 
-typedef struct smack_value { void* dummy; }* smack_value_t;
 smack_value_t __SMACK_values(void* ary, unsigned count);
 smack_value_t __SMACK_return_value(void);
 
