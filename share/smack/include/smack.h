@@ -35,8 +35,8 @@ void __SMACK_check_overflow(int);
 typedef struct smack_value { void* dummy; }* smack_value_t;
 
 #ifdef __cplusplus
-// temporary hack, now only accepts 'unsigned int*' as input type
-smack_value_t __SMACK_value(unsigned int*, ...);
+// temporary hack, now only accepts pointers as input type
+smack_value_t __SMACK_value(void*, ...);
 #else
 smack_value_t __SMACK_value();
 #endif
